@@ -3,7 +3,7 @@ from ultralytics import YOLO
 def main():
     model = YOLO("yolov8n.pt")
 
-    config_file_path = "Cartella_Bone_Fractures/data.yaml"
+    config_file_path = "data.yaml"
 
     project = "runs/fracture_detection"
     experiment = "My-Model"

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rilevatore Fratture Ossee</title>
+</head>
+<body>
+    <h1>Carica il tuo RX</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Predici</button>
+    </form>
+
+    {% if result_image %}
+    <h2>Risultato:</h2>
+    <img src="{{ url_for('send_result', filename=result_image) }}" width="400">
+    {% endif %}
+</body>
+</html>
