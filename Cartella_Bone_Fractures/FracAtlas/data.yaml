@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['fractured']
+
+roboflow:
+  workspace: bone-fracture-detection-aibwo
+  project: fracatlas-p7vbh
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/bone-fracture-detection-aibwo/fracatlas-p7vbh/dataset/3
