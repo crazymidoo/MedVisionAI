@@ -1,6 +1,5 @@
 train: /workspaces/MedVisionAI/Cartella_Bone_Fractures/train/images
 val: /workspaces/MedVisionAI/Cartella_Bone_Fractures/valid/images
 
-# Class names
 nc: 1
 names: ['Fracture']

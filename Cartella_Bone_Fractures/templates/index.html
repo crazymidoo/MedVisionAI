@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Rilevatore Fratture Ossee</title>
+    <title>Rilevamento Fratture</title>
 </head>
 <body>
-    <h1>Carica il tuo RX</h1>
+    <h1>Upload Immagine per Rilevamento Frattura</h1>
     <form method="POST" enctype="multipart/form-data">
         <input type="file" name="file" accept="image/*" required>
-        <button type="submit">Predici</button>
+        <button type="submit">Carica e Analizza</button>
     </form>
 
     {% if result_image %}
-    <h2>Risultato:</h2>
-    <img src="{{ url_for('send_result', filename=result_image) }}" width="400">
+        <h2>Risultato:</h2>
+        <img src="{{ url_for('send_result', filename=result_image) }}" alt="Risultato" style="max-width: 600px;">
+        {% if accuracy is not none %}
+            <p><strong>Accuratezza Modello:</strong> {{ accuracy | round(1) }}%</p>
+        {% else %}
+            <p>Accuratezza non disponibile.</p>
+        {% endif %}
     {% endif %}
 </body>
 </html>
