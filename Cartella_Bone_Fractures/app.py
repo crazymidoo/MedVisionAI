@@ -13,7 +13,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-model = YOLO("runs/fracture_detection/Fast-CPU/weights/best.pt")
+model = YOLO("saved_models/best.pt")
 CLASS_NAMES = ["FRACTURE"]
 
 def allowed_file(filename):
@@ -35,14 +35,12 @@ def index():
         file.save(filepath)
         original_image = filename
 
-        
         results = model.predict(filepath, imgsz=256, device="cpu", verbose=False)[0]
 
-        img = cv2.imread(filepath) 
+        img = cv2.imread(filepath)
         img_pred = img.copy()
-
         max_score = 0.0
-        threshold = 0.05 
+        threshold = 0.05
 
         for box in results.boxes.data.tolist():
             x1, y1, x2, y2, score, class_id = box
@@ -76,3 +74,4 @@ def send_result(filename):
 
 if __name__ == "__main__":
     app.run(debug=True)
+

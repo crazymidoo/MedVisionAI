@@ -1,13 +1,12 @@
 from ultralytics import YOLO
-import torch
 
 device = "cpu"
 print(f"Training su: {device}")
 
-model = YOLO("yolov8n.pt")  # oppure i pesi precedenti per fine-tuning
+model = YOLO("yolov8n.pt")
 
 model.train(
-    data="data.yaml",
+    data="/workspaces/MedVisionAI/dataset_completo/data.yaml",
     epochs=50,
     imgsz=256,
     batch=4,
