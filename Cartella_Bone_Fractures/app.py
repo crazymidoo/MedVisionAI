@@ -5,6 +5,7 @@ import os
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
 UPLOAD_FOLDER = "uploads"
 RESULT_FOLDER = "results"
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -12,7 +13,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-model = YOLO("runs/fracture_detection/Fast-Model/weights/best.pt")
+model = YOLO("runs/fracture_detection/Fast-CPU/weights/best.pt")
 CLASS_NAMES = ["FRACTURE"]
 
 def allowed_file(filename):
@@ -20,6 +21,7 @@ def allowed_file(filename):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    original_image = None
     result_image = None
     accuracy = None
 
@@ -31,15 +33,16 @@ def index():
         filename = secure_filename(file.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
+        original_image = filename
 
-        img = cv2.imread(filepath)
-        if img is None:
-            return "Errore nel caricamento dell'immagine"
+        
+        results = model.predict(filepath, imgsz=256, device="cpu", verbose=False)[0]
 
-        results = model(img, verbose=False)[0]
+        img = cv2.imread(filepath) 
         img_pred = img.copy()
-        threshold = 0.2
+
         max_score = 0.0
+        threshold = 0.05 
 
         for box in results.boxes.data.tolist():
             x1, y1, x2, y2, score, class_id = box
@@ -53,11 +56,19 @@ def index():
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
         accuracy = round(max_score * 100, 2) if max_score > 0 else None
+
         result_path = os.path.join(RESULT_FOLDER, filename)
         cv2.imwrite(result_path, img_pred)
         result_image = filename
 
-    return render_template("index.html", result_image=result_image, accuracy=accuracy)
+    return render_template("index.html",
+                           original_image=original_image,
+                           result_image=result_image,
+                           accuracy=accuracy)
+
+@app.route("/uploads/<filename>")
+def send_upload(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 @app.route("/results/<filename>")
 def send_result(filename):
