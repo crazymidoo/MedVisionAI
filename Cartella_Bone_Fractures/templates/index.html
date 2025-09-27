@@ -17,7 +17,7 @@
         <button type="submit">Upload & Analyze</button>
     </form>
 
-    <div id="preview-container"></div>
+    <div id="preview-container" style="margin-top:20px;"></div>
 
     {% if original_image and result_image %}
         <h2>Image Comparison:</h2>
@@ -28,7 +28,8 @@
                     src="{{ url_for('send_upload', filename=original_image) }}" 
                     class="intense" 
                     data-intense 
-                    alt="Original X-Ray">
+                    alt="Original X-Ray"
+                    style="max-width: 400px;">
             </div>
             <div>
                 <h3>Result</h3>
@@ -40,8 +41,10 @@
                 {% else %}
                     <p>Accuracy not available.</p>
                 {% endif %}
-                <button id="download-pdf">Download PDF</button>
+                <button id="download-pdf" style="margin-top: 10px;">Download PDF</button>
+
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
             </div>
         </div>
     {% endif %}

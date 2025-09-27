@@ -48,10 +48,17 @@ def index():
                 max_score = max(max_score, score)
                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
                 class_name = CLASS_NAMES[int(class_id)]
-                label = f"{class_name}: {score*100:.1f}%"
-                cv2.rectangle(img_pred, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(img_pred, label, (x1, y1 - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                label = class_name
+                cv2.rectangle(img_pred, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                cv2.putText(
+                    img_pred,
+                    label,
+                    (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 0, 255),
+                    1
+                )
 
         accuracy = round(max_score * 100, 2) if max_score > 0 else None
 
@@ -74,4 +81,3 @@ def send_result(filename):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
