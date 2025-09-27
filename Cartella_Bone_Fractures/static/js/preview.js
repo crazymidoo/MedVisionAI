@@ -1,40 +1,55 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const dropZone = document.getElementById("drop-zone");
     const fileInput = document.getElementById("file-input");
     const previewContainer = document.getElementById("preview-container");
     const form = fileInput.closest("form");
     const resultImage = document.getElementById("result-image");
     const downloadBtn = document.getElementById("download-pdf");
 
-    fileInput.addEventListener("change", () => {
-        const file = fileInput.files[0];
+    function showPreview(file) {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             previewContainer.innerHTML = '';
             const img = document.createElement("img");
             img.src = e.target.result;
-            img.style.maxWidth = "400px";
             previewContainer.appendChild(img);
         };
         reader.readAsDataURL(file);
+    }
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(fileInput.files[0]);
+        }
+    });
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length) {
+            showPreview(fileInput.files[0]);
+        }
     });
 
     form.addEventListener("submit", () => {
         let spinnerContainer = document.createElement("div");
         spinnerContainer.id = "loading-spinner";
-        spinnerContainer.style.display = "flex";
-        spinnerContainer.style.alignItems = "center";
-        spinnerContainer.style.gap = "10px";
-        spinnerContainer.style.marginTop = "20px";
 
         let spinner = document.createElement("div");
-        spinner.style.border = "4px solid #f3f3f3";
-        spinner.style.borderTop = "4px solid #3498db";
-        spinner.style.borderRadius = "50%";
-        spinner.style.width = "24px";
-        spinner.style.height = "24px";
-        spinner.style.animation = "spin 1s linear infinite";
-
         let text = document.createElement("span");
         text.textContent = "Processing...";
 
@@ -83,12 +98,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     new Intense('.intense');
-
-    const style = document.createElement('style');
-    style.innerHTML = `
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }`;
-    document.head.appendChild(style);
 });

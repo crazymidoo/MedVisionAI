@@ -1,0 +1,85 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f9f9f9;
+    color: #333;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+button {
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+button:hover {
+    background: #2980b9;
+}
+
+#drop-zone {
+    border: 2px dashed #aaa;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+    background: #fff;
+    margin-bottom: 15px;
+}
+#drop-zone.dragover {
+    background-color: #f0f8ff;
+    border-color: #3498db;
+}
+#drop-zone p {
+    margin: 0 0 10px;
+}
+
+#preview-container {
+    margin-top: 20px;
+}
+
+#result-container {
+    display: inline-block;
+    max-width: 400px;
+}
+
+#preview-container img,
+#result-container img,
+.intense {
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#loading-spinner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#loading-spinner div {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -2,28 +2,22 @@
 <html>
 <head>
     <title>Fracture Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/IntenseImages/1.0.0/Intense.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
-    <style>
-        #preview-container img, #result-container img {
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        #result-container {
-            display: inline-block;
-            max-width: 400px;
-        }
-    </style>
 </head>
 <body>
     <h1>Upload X-Ray Image for Fracture Detection</h1>
     <form method="POST" enctype="multipart/form-data">
-        <input type="file" id="file-input" name="file" accept="image/*" required>
+        <div id="drop-zone">
+            <p>Trascina qui un'immagine oppure</p>
+            <input type="file" id="file-input" name="file" accept="image/*" required>
+        </div>
         <button type="submit">Upload & Analyze</button>
     </form>
 
-    <div id="preview-container" style="margin-top:20px;"></div>
+    <div id="preview-container"></div>
 
     {% if original_image and result_image %}
         <h2>Image Comparison:</h2>
@@ -34,22 +28,20 @@
                     src="{{ url_for('send_upload', filename=original_image) }}" 
                     class="intense" 
                     data-intense 
-                    style="max-width: 400px;">
+                    alt="Original X-Ray">
             </div>
             <div>
                 <h3>Result</h3>
                 <div id="result-container">
-                    <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image">
+                    <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image">
                 </div>
                 {% if accuracy is not none %}
                     <p><strong>Model Accuracy:</strong> {{ accuracy | round(1) }}%</p>
                 {% else %}
                     <p>Accuracy not available.</p>
                 {% endif %}
-                <button id="download-pdf" style="margin-top: 10px;">Download PDF</button>
-
+                <button id="download-pdf">Download PDF</button>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
             </div>
         </div>
     {% endif %}
