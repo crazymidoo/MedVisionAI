@@ -1,5 +1,7 @@
-train: /workspaces/MedVisionAI/dataset_completo/train/images
-val: /workspaces/MedVisionAI/dataset_completo/valid/images
+train: /workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/train/images
+val: /workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/valid/images
 
 nc: 1
-names: ['Fracture']
+
+names:
+  - Fracture

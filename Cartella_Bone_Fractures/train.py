@@ -6,7 +6,7 @@ print(f"Training su: {device}")
 model = YOLO("yolov8n.pt")
 
 model.train(
-    data="/workspaces/MedVisionAI/dataset_completo/data.yaml",
+    data="/workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/data.yaml",
     epochs=25,
     imgsz=256,
     batch=4,
