@@ -7,7 +7,7 @@ model = YOLO("yolov8n.pt")
 
 model.train(
     data="/workspaces/MedVisionAI/dataset_completo/data.yaml",
-    epochs=50,
+    epochs=25,
     imgsz=256,
     batch=4,
     device=device,
