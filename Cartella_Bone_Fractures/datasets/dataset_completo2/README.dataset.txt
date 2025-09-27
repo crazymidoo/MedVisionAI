@@ -1,5 +1,5 @@
-# bone fracture > 2024-11-05 10:14am
-https://universe.roboflow.com/yolov8seg-vi1pf/bone-fracture-ez4y3
+# Fracture  > 2025-06-29 5:28pm
+https://universe.roboflow.com/braintumorcaption/fracture-9v4kc
 
 Provided by a Roboflow user
 License: CC BY 4.0

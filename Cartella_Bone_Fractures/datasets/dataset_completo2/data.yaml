@@ -3,11 +3,11 @@ val: ../valid/images
 test: ../test/images
 
 nc: 1
-names: ['fractured']
+names: ['Fractured']
 
 roboflow:
-  workspace: yolov8seg-vi1pf
-  project: bone-fracture-ez4y3
-  version: 2
+  workspace: braintumorcaption
+  project: fracture-9v4kc
+  version: 1
   license: CC BY 4.0
-  url: https://universe.roboflow.com/yolov8seg-vi1pf/bone-fracture-ez4y3/dataset/2
+  url: https://universe.roboflow.com/braintumorcaption/fracture-9v4kc/dataset/1
