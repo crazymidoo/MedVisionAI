@@ -2,24 +2,27 @@
 <html>
 <head>
     <title>Rilevamento Fratture</title>
+    <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
 </head>
 <body>
     <h1>Upload Immagine per Rilevamento Frattura</h1>
     <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*" required>
+        <input type="file" id="file-input" name="file" accept="image/*" required>
         <button type="submit">Carica e Analizza</button>
     </form>
+
+    <div id="preview-container" style="margin-top:20px;"></div>
 
     {% if original_image and result_image %}
         <h2>Confronto Immagini:</h2>
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <div>
                 <h3>Originale</h3>
-                <img src="{{ url_for('send_upload', filename=original_image) }}" alt="Originale" style="max-width: 400px;">
+                <img src="{{ url_for('send_upload', filename=original_image) }}" style="max-width: 400px;">
             </div>
             <div>
                 <h3>Risultato</h3>
-                <img src="{{ url_for('send_result', filename=result_image) }}" alt="Risultato" style="max-width: 400px;">
+                <img src="{{ url_for('send_result', filename=result_image) }}" style="max-width: 400px;">
                 {% if accuracy is not none %}
                     <p><strong>Accuratezza Modello:</strong> {{ accuracy | round(1) }}%</p>
                 {% else %}
