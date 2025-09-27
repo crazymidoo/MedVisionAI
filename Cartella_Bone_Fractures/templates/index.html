@@ -1,33 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Rilevamento Fratture</title>
+    <title>Fracture Detection</title>
     <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/IntenseImages/1.0.0/Intense.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
+    <style>
+        #preview-container img, #result-container img {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #result-container {
+            display: inline-block;
+            max-width: 400px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload Immagine per Rilevamento Frattura</h1>
+    <h1>Upload X-Ray Image for Fracture Detection</h1>
     <form method="POST" enctype="multipart/form-data">
         <input type="file" id="file-input" name="file" accept="image/*" required>
-        <button type="submit">Carica e Analizza</button>
+        <button type="submit">Upload & Analyze</button>
     </form>
 
     <div id="preview-container" style="margin-top:20px;"></div>
 
     {% if original_image and result_image %}
-        <h2>Confronto Immagini:</h2>
+        <h2>Image Comparison:</h2>
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <div>
-                <h3>Originale</h3>
-                <img src="{{ url_for('send_upload', filename=original_image) }}" style="max-width: 400px;">
+                <h3>Original</h3>
+                <img 
+                    src="{{ url_for('send_upload', filename=original_image) }}" 
+                    class="intense" 
+                    data-intense 
+                    style="max-width: 400px;">
             </div>
             <div>
-                <h3>Risultato</h3>
-                <img src="{{ url_for('send_result', filename=result_image) }}" style="max-width: 400px;">
+                <h3>Result</h3>
+                <div id="result-container">
+                    <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image">
+                </div>
                 {% if accuracy is not none %}
-                    <p><strong>Accuratezza Modello:</strong> {{ accuracy | round(1) }}%</p>
+                    <p><strong>Model Accuracy:</strong> {{ accuracy | round(1) }}%</p>
                 {% else %}
-                    <p>Accuratezza non disponibile.</p>
+                    <p>Accuracy not available.</p>
                 {% endif %}
+                <button id="download-pdf" style="margin-top: 10px;">Download PDF</button>
+
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
             </div>
         </div>
     {% endif %}
