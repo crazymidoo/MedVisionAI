@@ -1,5 +1,5 @@
-train: /workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/train/images
-val: /workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/valid/images
+train: C:/Users/abc94/Desktop/MedVisionAI-main/Cartella_Bone_Fractures/datasets/dataset_completo2/train/images
+val:   C:/Users/abc94/Desktop/MedVisionAI-main/Cartella_Bone_Fractures/datasets/dataset_completo2/valid/images
 
 nc: 1
 

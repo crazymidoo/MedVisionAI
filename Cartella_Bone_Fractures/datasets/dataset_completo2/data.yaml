@@ -3,11 +3,11 @@ val: ../valid/images
 test: ../test/images
 
 nc: 1
-names: ['Fractured']
+names: ['fractured']
 
 roboflow:
-  workspace: braintumorcaption
-  project: fracture-9v4kc
+  workspace: leg-fracture
+  project: leg-fracture
   version: 1
   license: CC BY 4.0
-  url: https://universe.roboflow.com/braintumorcaption/fracture-9v4kc/dataset/1
+  url: https://universe.roboflow.com/leg-fracture/leg-fracture/dataset/1
