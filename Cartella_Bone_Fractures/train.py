@@ -6,7 +6,11 @@ print(f"Training su: {device}")
 model = YOLO("yolov8n.pt")
 
 model.train(
+<<<<<<< HEAD
     data="/workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/data.yaml",
+=======
+    data="Cartella_Bone_Fractures/data.yaml",
+>>>>>>> 99229b53 (Modifiche app.py)
     epochs=25,
     imgsz=256,
     batch=4,
@@ -23,5 +27,9 @@ model.train(
     copy_paste=0.1
 )
 
+<<<<<<< HEAD
 print("Training completato! Pesi salvati in:")
+=======
+print("Training completato. Pesi salvati in:")
+>>>>>>> 99229b53 (Modifiche app.py)
 print("runs/fracture_detection/Fast-CPU/weights/best.pt")
