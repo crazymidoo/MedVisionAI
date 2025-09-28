@@ -6,30 +6,18 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-<<<<<<< HEAD
-UPLOAD_FOLDER = "uploads"
-RESULT_FOLDER = "results"
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-=======
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 RESULT_FOLDER = os.path.join(BASE_DIR, "results")
 MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "best.pt")
->>>>>>> 99229b53 (Modifiche app.py)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-<<<<<<< HEAD
-model = YOLO("saved_models/best.pt")
-CLASS_NAMES = ["FRACTURE"]
-
-=======
 model = YOLO(MODEL_PATH)
 CLASS_NAMES = ["FRACTURE"]
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
->>>>>>> 99229b53 (Modifiche app.py)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -62,23 +50,9 @@ def index():
                 max_score = max(max_score, score)
                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
                 class_name = CLASS_NAMES[int(class_id)]
-<<<<<<< HEAD
-                label = class_name
-                cv2.rectangle(img_pred, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                cv2.putText(
-                    img_pred,
-                    label,
-                    (x1, y1 - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (0, 0, 255),
-                    1
-                )
-=======
                 cv2.rectangle(img_pred, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 cv2.putText(img_pred, class_name, (x1, y1 - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
->>>>>>> 99229b53 (Modifiche app.py)
 
         accuracy = round(max_score * 100, 2) if max_score > 0 else None
 
