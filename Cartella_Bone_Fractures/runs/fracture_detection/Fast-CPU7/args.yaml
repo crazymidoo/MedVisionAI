@@ -1,7 +1,7 @@
 task: detect
 mode: train
 model: yolov8n.pt
-data: Cartella_Bone_Fractures/data.yaml
+data: /workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/data.yaml
 epochs: 25
 time: null
 patience: 2
@@ -104,4 +104,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: C:\Users\abc94\Desktop\MedVisionAI-main\Cartella_Bone_Fractures\runs\fracture_detection\Fast-CPU7
+save_dir: /workspaces/MedVisionAI/Cartella_Bone_Fractures/runs/fracture_detection/Fast-CPU7

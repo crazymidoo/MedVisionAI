@@ -6,14 +6,14 @@ print(f"Training su: {device}")
 model = YOLO("yolov8n.pt")
 
 model.train(
-    data="Cartella_Bone_Fractures/data.yaml",
-    epochs=25,
+    data="/workspaces/MedVisionAI/Cartella_Bone_Fractures/datasets/dataset_completo2/data.yaml",
+    epochs=50,
     imgsz=256,
     batch=4,
     device=device,
     workers=2,
     freeze=[0],
-    patience=2,
+    patience=7,
     project="runs/fracture_detection",
     name="Fast-CPU",
     verbose=True,
