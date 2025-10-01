@@ -1,0 +1,5 @@
+train: /workspaces/MedVisionAI/dataset_completo/train/images
+val: /workspaces/MedVisionAI/dataset_completo/valid/images
+
+nc: 1
+names: ['Fracture']
