@@ -26,6 +26,7 @@ def index():
     original_image = None
     result_image = None
     accuracy = None
+    confidences = []
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -48,6 +49,7 @@ def index():
             x1, y1, x2, y2, score, class_id = box
             if score > threshold:
                 max_score = max(max_score, score)
+                confidences.append(round(float(score), 2))
                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
                 class_name = CLASS_NAMES[int(class_id)]
                 cv2.rectangle(img_pred, (x1, y1), (x2, y2), (0, 0, 255), 2)
@@ -55,15 +57,16 @@ def index():
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
         accuracy = round(max_score * 100, 2) if max_score > 0 else None
-
         result_path = os.path.join(RESULT_FOLDER, filename)
         cv2.imwrite(result_path, img_pred)
         result_image = filename
 
+    confidences = confidences or []
     return render_template("index.html",
                            original_image=original_image,
                            result_image=result_image,
-                           accuracy=accuracy)
+                           accuracy=accuracy,
+                           confidences=confidences)
 
 @app.route("/uploads/<filename>")
 def send_upload(filename):

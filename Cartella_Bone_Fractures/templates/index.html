@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fracture Detection</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
   <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/IntenseImages/1.0.0/Intense.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script>
+    window.confidences = {{ confidences | tojson | safe }};
+  </script>
 </head>
-
 <body>
   <div class="container">
     <div class="header">
@@ -26,7 +26,6 @@
         </div>
       </div>
     </div>
-
     <div class="grid">
       <div class="card">
         <form method="POST" enctype="multipart/form-data" id="upload-form">
@@ -38,16 +37,13 @@
             </div>
             <input type="file" id="file-input" name="file" accept="image/*" hidden required>
           </div>
-
           <div class="controls">
             <button type="submit" class="btn">Upload & Analyze</button>
             <span class="kv">YOLOv8 Analysis</span>
           </div>
         </form>
-
         <div id="preview-container"></div>
       </div>
-
       {% if original_image and result_image %}
       <div class="sidepanel">
         <div class="card result">
@@ -56,7 +52,6 @@
             <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image" class="intense" data-intense>
           </div>
         </div>
-
         <div class="card meta">
           <div class="row">
             <span>Analyzed File</span>
@@ -64,13 +59,11 @@
           </div>
           <div class="row">
             <span>Model Accuracy</span>
-            <span class="value">
-              {% if accuracy is not none %}
-                {{ accuracy | round(2) }}%
-              {% else %}
-                N/D
-              {% endif %}
-            </span>
+            <span class="value">{{ accuracy if accuracy is not none else 'N/D' }}%</span>
+          </div>
+          <div class="card">
+            <div class="label">Confidence Scores</div>
+            <canvas id="confidenceChart" width="400" height="200"></canvas>
           </div>
           <div class="actions">
             <button id="download-pdf" class="btn" style="width:100%;">📄 Download PDF</button>

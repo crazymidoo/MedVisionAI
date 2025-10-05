@@ -12,36 +12,24 @@ document.addEventListener("DOMContentLoaded", () => {
   attachSubmitHandler();
   initResultInteractions();
   if (typeof Intense !== "undefined") initIntense();
+  initConfidenceChart();
 
   function attachDropHandlers(){
     if (!dropZone) return;
     dropZone.addEventListener("click", () => fileInput.click());
-
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
-    });
-
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.classList.remove("dragover");
-    });
-
+    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
     dropZone.addEventListener("drop", (e) => {
       e.preventDefault();
       dropZone.classList.remove("dragover");
       const file = e.dataTransfer.files && e.dataTransfer.files[0];
-      if (file) {
-        fileInput.files = e.dataTransfer.files;
-        showPreview(file);
-      }
+      if (file) { fileInput.files = e.dataTransfer.files; showPreview(file); }
     });
   }
 
   function attachFileChange(){
     if (!fileInput) return;
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files.length) showPreview(fileInput.files[0]);
-    });
+    fileInput.addEventListener("change", () => { if (fileInput.files.length) showPreview(fileInput.files[0]); });
   }
 
   function showPreview(file){
@@ -84,32 +72,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function initResultInteractions(){
     if (!resultImage) return;
-
     resultImage.style.cursor = "grab";
-
-    resultImage.addEventListener("dblclick", async () => {
-      if (resultImage.requestFullscreen) await resultImage.requestFullscreen();
-    });
+    resultImage.addEventListener("dblclick", async () => { if (resultImage.requestFullscreen) await resultImage.requestFullscreen(); });
 
     async function imageToDataURL(imgEl){
       if (!imgEl.src) throw new Error("No image source");
-
       return await new Promise((resolve, reject) => {
         const tmp = new Image();
         tmp.crossOrigin = "anonymous";
         tmp.onload = () => {
-          try {
-            const canvas = document.createElement("canvas");
-            canvas.width = tmp.naturalWidth;
-            canvas.height = tmp.naturalHeight;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(tmp, 0, 0);
-            resolve(canvas.toDataURL("image/jpeg", 0.92));
-          } catch (err) { reject(err); }
+          try { const canvas = document.createElement("canvas"); canvas.width = tmp.naturalWidth; canvas.height = tmp.naturalHeight; canvas.getContext("2d").drawImage(tmp, 0, 0); resolve(canvas.toDataURL("image/jpeg", 0.92)); }
+          catch (err) { reject(err); }
         };
         tmp.onerror = (e) => reject(e);
         tmp.src = imgEl.src;
-        
       });
     }
 
@@ -121,46 +97,30 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const { jsPDF } = window.jspdf;
           const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
           const dataURL = await imageToDataURL(resultImage);
           const imgProps = pdf.getImageProperties(dataURL);
-          const pdfWidth = pdf.internal.pageSize.getWidth() - 20; 
+          const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
           const ratio = Math.min(pdfWidth / imgProps.width, (pdf.internal.pageSize.getHeight() - 60) / imgProps.height);
           const imgWidth = imgProps.width * ratio;
           const imgHeight = imgProps.height * ratio;
           const x = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
           const y = 30;
-
-          
           pdf.setFontSize(16);
           pdf.text("Fracture Detection Report", 14, 16);
           pdf.setFontSize(11);
           const accText = document.querySelector(".meta .value") ? document.querySelector(".meta .value").textContent : "";
           pdf.text(`Risultato: ${accText}`, 14, 24);
-          
           pdf.addImage(dataURL, 'JPEG', x, y, imgWidth, imgHeight, undefined, 'MEDIUM');
           pdf.save("fracture_report.pdf");
-        } catch (err) {
-          console.error(err);
-          alert("Errore nella creazione del PDF. Controlla la console.");
-        } finally {
-          downloadBtn.disabled = false;
-          downloadBtn.textContent = "Download PDF";
-        }
+        } catch (err) { console.error(err); alert("Errore nella creazione del PDF. Controlla la console."); }
+        finally { downloadBtn.disabled = false; downloadBtn.textContent = "Download PDF"; }
       });
     }
 
-    
-    if (window.panzoom) {
-      const pz = panzoom(resultImage, { maxScale: 8, minScale: 1, contain: 'outside' });
-     
-      resultImage.addEventListener("dblclick", () => pz.zoomAbs(0,0,1));
-    }
+    if (window.panzoom) { const pz = panzoom(resultImage, { maxScale: 8, minScale: 1, contain: 'outside' }); resultImage.addEventListener("dblclick", () => pz.zoomAbs(0,0,1)); }
   }
 
-  function initIntense(){
-    try{ new Intense(document.querySelectorAll('.intense')); } catch(e){/* ignore */ }
-  }
+  function initIntense(){ try{ new Intense(document.querySelectorAll('.intense')); } catch(e){/* ignore */ } }
 
   function createThemeToggle(){
     const btn = document.createElement("button");
@@ -170,23 +130,33 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.title = "Toggle theme";
     const header = document.querySelector(".header");
     if (header) header.appendChild(btn);
-
-    const apply = () => {
-      if (document.body.classList.contains("dark")) {
-        btn.textContent = "Light";
-      } else {
-        btn.textContent = "Dark";
-      }
-    };
-
-    btn.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
-      apply();
-    });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.body.classList.add("dark");
-    }
+    const apply = () => { btn.textContent = document.body.classList.contains("dark") ? "Light" : "Dark"; };
+    btn.addEventListener("click", () => { document.body.classList.toggle("dark"); apply(); });
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add("dark");
     apply();
     return btn;
+  }
+
+  function initConfidenceChart(){
+    const chartCanvas = document.getElementById("confidenceChart");
+    if (!chartCanvas) return;
+    const confidences = window.confidences || [];
+    new Chart(chartCanvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: confidences.map((_,i) => `Box ${i+1}`),
+        datasets: [{
+          label: "Confidence",
+          data: confidences,
+          backgroundColor: confidences.map(v => `rgba(43, 143, 230, 0.7)`),
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => (ctx.raw*100).toFixed(1)+"%" } } },
+        scales: { y: { min:0, max:1, ticks:{ callback: v => (v*100).toFixed(0)+"%" } } }
+      }
+    });
   }
 });
