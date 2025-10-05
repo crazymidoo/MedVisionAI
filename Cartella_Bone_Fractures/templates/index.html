@@ -1,52 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>Fracture Detection</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/IntenseImages/1.0.0/Intense.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fracture Detection</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/IntenseImages/1.0.0/Intense.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </head>
+
 <body>
-    <h1>Upload X-Ray Image for Fracture Detection</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <div id="drop-zone">
-            <p>Trascina qui un'immagine oppure</p>
-            <input type="file" id="file-input" name="file" accept="image/*" required>
+  <div class="container">
+    <div class="header">
+      <div class="title">
+        <div class="logo">FD</div>
+        <div>
+          <h1>Fracture Detection</h1>
+          <small>Upload and analyze X-Ray images with YOLOv8</small>
         </div>
-        <button type="submit">Upload & Analyze</button>
-    </form>
+      </div>
+    </div>
 
-    <div id="preview-container" style="margin-top:20px;"></div>
-
-    {% if original_image and result_image %}
-        <h2>Image Comparison:</h2>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+    <div class="grid">
+      <div class="card">
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+          <div id="drop-zone">
+            <div class="icon">📁</div>
             <div>
-                <h3>Original</h3>
-                <img 
-                    src="{{ url_for('send_upload', filename=original_image) }}" 
-                    class="intense" 
-                    data-intense 
-                    alt="Original X-Ray"
-                    style="max-width: 400px;">
+              <p>Drag an image here</p>
+              <small>or click to select a file (JPG, PNG)</small>
             </div>
-            <div>
-                <h3>Result</h3>
-                <div id="result-container">
-                    <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image">
-                </div>
-                {% if accuracy is not none %}
-                    <p><strong>Model Accuracy:</strong> {{ accuracy | round(1) }}%</p>
-                {% else %}
-                    <p>Accuracy not available.</p>
-                {% endif %}
-                <button id="download-pdf" style="margin-top: 10px;">Download PDF</button>
+            <input type="file" id="file-input" name="file" accept="image/*" hidden required>
+          </div>
 
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+          <div class="controls">
+            <button type="submit" class="btn">Upload & Analyze</button>
+            <span class="kv">YOLOv8 Analysis</span>
+          </div>
+        </form>
 
-            </div>
+        <div id="preview-container"></div>
+      </div>
+
+      {% if original_image and result_image %}
+      <div class="sidepanel">
+        <div class="card result">
+          <div class="label">Analysis Result</div>
+          <div id="result-container">
+            <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image" class="intense" data-intense>
+          </div>
         </div>
-    {% endif %}
+
+        <div class="card meta">
+          <div class="row">
+            <span>Analyzed File</span>
+            <span class="value">{{ original_image }}</span>
+          </div>
+          <div class="row">
+            <span>Model Accuracy</span>
+            <span class="value">
+              {% if accuracy is not none %}
+                {{ accuracy | round(2) }}%
+              {% else %}
+                N/D
+              {% endif %}
+            </span>
+          </div>
+          <div class="actions">
+            <button id="download-pdf" class="btn" style="width:100%;">📄 Download PDF</button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>
