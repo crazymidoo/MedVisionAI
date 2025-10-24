@@ -1,5 +1,4 @@
-# MedVisionAI Project
-# 🦴 Bone Fracture Detection (Work in Progress)
+# Bone Fracture Detection (Work in Progress)
 
 This project aims to build a **web application** for detecting bone fractures in X-ray images using **YOLOv8** and **Flask**.  
 It includes both the **training pipeline** for the model and a **Flask-based interface** for image upload and fracture visualization.
@@ -8,7 +7,7 @@ It includes both the **training pipeline** for the model and a **Flask-based int
 
 ---
 
-## 🚀 Features
+## Features
 
 - **YOLOv8-based fracture detection**
 - **Upload X-ray images** via a simple Flask web app
