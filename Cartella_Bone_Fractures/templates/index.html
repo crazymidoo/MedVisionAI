@@ -19,19 +19,32 @@
   <div class="container">
     <div class="header">
       <div class="title">
-        <div class="logo">FD</div>
+        <div class="logo">
+          <img src="{{ url_for('static', filename='Logo/Logo.JPG') }}" alt="Logo">
+        </div>
         <div>
           <h1>MedVisionAI</h1>
           <small>Detect Fractures Instantly</small>
         </div>
       </div>
+      <nav class="menu">
+        <ul>
+          <li><a href="#intro">Home</a></li>
+          <li><a href="#who">Who Can Use</a></li>
+          <li><a href="#how">How It Works</a></li>
+          <li><a href="#why">Why Choose Us</a></li>
+        </ul>
+      </nav>
     </div>
 
-    <div class="intro">
-      <p>Welcome to Fracture Detection, a smart platform designed to make understanding X-rays easier for everyone. Here, advanced AI helps highlight potential fractures in just seconds, offering clear and easy-to-read results.</p>
+    <br>
+
+    <section id="intro">
+      <h2>Welcome to Fracture Detection</h2>
+      <p>A smart platform designed to make understanding X-rays easier for everyone. Advanced AI highlights potential fractures in just seconds, offering clear and easy-to-read results.</p>
       <p>Whether you are a medical professional, a student, a researcher, or simply curious about medical imaging, this platform provides a quick and reliable way to explore X-ray images. No prior experience is needed—complex analysis is now simple and accessible.</p>
-      <p>Discover how technology can help you see more, understand more, and make X-ray analysis faster and easier than ever before!</p>
-    </div>
+      <p>Discover how technology can help you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
+    </section>
 
     <div class="grid">
       <div class="card">
@@ -79,6 +92,22 @@
       </div>
       {% endif %}
     </div>
+
+    <section id="how">
+      <h2>How It Works</h2>
+      <p>Simply upload an X-ray image in JPG or PNG format. The AI automatically detects possible fractures and generates easy-to-read reports for further review.</p>
+    </section>
+
+    <section id="who">
+      <h2>Who Can Use It?</h2>
+      <p>The platform is perfect for professionals, students, researchers, or anyone interested in medical imaging. No prior experience is required to explore and understand X-ray results efficiently.</p>
+    </section>
+
+    <section id="why">
+      <h2>Why Choose Fracture Detection?</h2>
+      <p>The service combines speed, accuracy, and clarity, offering a reliable tool for learning, research, and professional review. Technology helps you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
+    </section>
+
   </div>
 </body>
 </html>
