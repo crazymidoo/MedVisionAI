@@ -17,97 +17,146 @@
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <div class="title">
+    <header class="site-header">
+      <div class="logo-title">
         <div class="logo">
           <img src="{{ url_for('static', filename='Logo/Logo.JPG') }}" alt="Logo">
         </div>
-        <div>
+        <div class="title-text">
           <h1>MedVisionAI</h1>
           <small>Detect Fractures Instantly</small>
         </div>
       </div>
       <nav class="menu">
         <ul>
-          <li><a href="#intro">Home</a></li>
-          <li><a href="#who">Who Can Use</a></li>
+          <li><a href="#intro" class="active">Home</a></li>
           <li><a href="#how">How It Works</a></li>
+          <li><a href="#who">Who Can Use</a></li>
           <li><a href="#why">Why Choose Us</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
         </ul>
       </nav>
-    </div>
+      <button id="theme-toggle" class="toggle-theme btn secondary">Dark</button>
+    </header>
+    
+  </br>
 
-    <br>
+    <main>
+      <section id="intro">
+        <h2>Welcome to Fracture Detection</h2>
+        <p>A smart platform designed to make understanding X-rays easier for everyone. Advanced AI highlights potential fractures in just seconds, offering clear and easy-to-read results.</p>
+        <p>Whether you are a medical professional, a student, a researcher, or simply curious about medical imaging, this platform provides a quick and reliable way to explore X-ray images. No prior experience is needed—complex analysis is now simple and accessible.</p>
+        <p>Discover how technology can help you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
+      </section>
 
-    <section id="intro">
-      <h2>Welcome to Fracture Detection</h2>
-      <p>A smart platform designed to make understanding X-rays easier for everyone. Advanced AI highlights potential fractures in just seconds, offering clear and easy-to-read results.</p>
-      <p>Whether you are a medical professional, a student, a researcher, or simply curious about medical imaging, this platform provides a quick and reliable way to explore X-ray images. No prior experience is needed—complex analysis is now simple and accessible.</p>
-      <p>Discover how technology can help you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
-    </section>
+      <section id="how">
+        <h2>How It Works</h2>
+        <p>Simply upload an X-ray image in JPG or PNG format. The AI automatically detects possible fractures and generates easy-to-read reports for further review.</p>
+      </section>
 
-    <div class="grid">
-      <div class="card">
-        <form method="POST" enctype="multipart/form-data" id="upload-form">
-          <div id="drop-zone">
-            <div class="icon">📁</div>
-            <div>
-              <p>Drag an image here</p>
-              <small>or click to select a file (JPG, PNG)</small>
-            </div>
-            <input type="file" id="file-input" name="file" accept="image/*" hidden required>
-          </div>
-          <div class="controls">
-            <button type="submit" class="btn">Upload & Analyze</button>
-            <span class="kv">YOLOv8 Analysis</span>
-          </div>
-        </form>
-        <div id="preview-container"></div>
-      </div>
-      {% if original_image and result_image %}
-      <div class="sidepanel">
-        <div class="card result">
-          <div class="label">Analysis Result</div>
-          <div id="result-container">
-            <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image" class="intense" data-intense>
-          </div>
-        </div>
-        <div class="card meta">
-          <div class="row">
-            <span>Analyzed File</span>
-            <span class="value">{{ original_image }}</span>
-          </div>
-          <div class="row">
-            <span>Model Accuracy</span>
-            <span class="value">{{ accuracy if accuracy is not none else 'N/D' }}%</span>
-          </div>
+      <section id="who">
+        <h2>Who Can Use It?</h2>
+        <p>The platform is perfect for professionals, students, researchers, or anyone interested in medical imaging. No prior experience is required to explore and understand X-ray results efficiently.</p>
+      </section>
+
+      <section id="why">
+        <h2>Why Choose Fracture Detection?</h2>
+        <p>The service combines speed, accuracy, and clarity, offering a reliable tool for learning, research, and professional review. Technology helps you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
+      </section>
+
+      <section id="demo">
+        <h2>Demo</h2>
+        <div class="grid">
           <div class="card">
-            <div class="label">Confidence Scores</div>
-            <canvas id="confidenceChart" width="400" height="200"></canvas>
+            <form method="POST" enctype="multipart/form-data" id="upload-form">
+              <div id="drop-zone">
+                <div class="icon">📁</div>
+                <div>
+                  <p>Drag an image here</p>
+                  <small>or click to select a file (JPG, PNG)</small>
+                </div>
+                <input type="file" id="file-input" name="file" accept="image/*" hidden required>
+              </div>
+              <div class="controls">
+                <button type="submit" class="btn">Upload & Analyze</button>
+                <span class="kv">YOLOv8 Analysis</span>
+              </div>
+            </form>
+            <div id="preview-container"></div>
           </div>
-          <div class="actions">
-            <button id="download-pdf" class="btn" style="width:100%;">📄 Download PDF</button>
+          {% if original_image and result_image %}
+          <div class="sidepanel">
+            <div class="card result">
+              <div class="label">Analysis Result</div>
+              <div id="result-container">
+                <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image" class="intense" data-intense>
+              </div>
+            </div>
+            <div class="card meta">
+              <div class="row">
+                <span>Analyzed File</span>
+                <span class="value">{{ original_image }}</span>
+              </div>
+              <div class="row">
+                <span>Model Accuracy</span>
+                <span class="value">{{ accuracy if accuracy is not none else 'N/D' }}%</span>
+              </div>
+              <div class="card">
+                <div class="label">Confidence Scores</div>
+                <canvas id="confidenceChart" width="400" height="200"></canvas>
+              </div>
+              <div class="actions">
+                <button id="download-pdf" class="btn" style="width:100%;">📄 Download PDF</button>
+              </div>
+            </div>
           </div>
+          {% endif %}
         </div>
-      </div>
-      {% endif %}
-    </div>
+      </section>
 
-    <section id="how">
-      <h2>How It Works</h2>
-      <p>Simply upload an X-ray image in JPG or PNG format. The AI automatically detects possible fractures and generates easy-to-read reports for further review.</p>
-    </section>
+      <section id="faq">
+        <h2>FAQ</h2>
+        <div class="faq-item">
+          <p><strong>How accurate is the AI?</strong></p>
+          <p>The AI provides predictions based on trained models; accuracy may vary depending on image quality.</p>
+        </div>
+        <div class="faq-item">
+          <p><strong>Is my data safe?</strong></p>
+          <p>All uploaded images are processed securely and not stored permanently.</p>
+        </div>
+        <div class="faq-item">
+          <p><strong>What image formats are supported?</strong></p>
+          <p>JPG and PNG images are supported for upload and analysis.</p>
+        </div>
+      </section>
 
-    <section id="who">
-      <h2>Who Can Use It?</h2>
-      <p>The platform is perfect for professionals, students, researchers, or anyone interested in medical imaging. No prior experience is required to explore and understand X-ray results efficiently.</p>
-    </section>
+      <section id="about">
+        <h2>About MedVisionAI</h2>
+        <p>MedVisionAI is a team of developers and medical professionals dedicated to making fracture detection faster, simpler, and more accessible through AI technology.</p>
+      </section>
 
-    <section id="why">
-      <h2>Why Choose Fracture Detection?</h2>
-      <p>The service combines speed, accuracy, and clarity, offering a reliable tool for learning, research, and professional review. Technology helps you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
-    </section>
-
+      <section id="contact">
+        <h2>Contact Us</h2>
+        <form method="POST" action="#">
+          <div>
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div>
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+          </div>
+          <button type="submit" class="btn">Send</button>
+        </form>
+      </section>
+    </main>
   </div>
 </body>
 </html>

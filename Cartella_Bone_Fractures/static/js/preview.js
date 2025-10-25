@@ -5,21 +5,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = fileInput.closest("form");
   const resultImage = document.getElementById("result-image");
   const downloadBtn = document.getElementById("download-pdf");
-  const toggleThemeBtn = createThemeToggle();
+  const toggleBtn = document.querySelector('.toggle-theme');
 
-  attachDropHandlers();
-  attachFileChange();
-  attachSubmitHandler();
-  initResultInteractions();
-  if (typeof Intense !== "undefined") initIntense();
-  initConfidenceChart();
+  if (toggleBtn) {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add("dark");
+    const updateButtonText = () => { toggleBtn.textContent = document.body.classList.contains("dark") ? "Light" : "Dark"; };
+    updateButtonText();
+    toggleBtn.addEventListener("click", () => { document.body.classList.toggle("dark"); updateButtonText(); });
+  }
 
-  function attachDropHandlers(){
-    if (!dropZone) return;
+  if (dropZone) {
     dropZone.addEventListener("click", () => fileInput.click());
-    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
     dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-    dropZone.addEventListener("drop", (e) => {
+    dropZone.addEventListener("drop", e => {
       e.preventDefault();
       dropZone.classList.remove("dragover");
       const file = e.dataTransfer.files && e.dataTransfer.files[0];
@@ -27,10 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function attachFileChange(){
-    if (!fileInput) return;
-    fileInput.addEventListener("change", () => { if (fileInput.files.length) showPreview(fileInput.files[0]); });
-  }
+  if (fileInput) fileInput.addEventListener("change", () => { if (fileInput.files.length) showPreview(fileInput.files[0]); });
 
   function showPreview(file){
     if (!file) return;
@@ -44,8 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const img = document.createElement("img");
     img.alt = file.name;
     img.loading = "lazy";
-
-    reader.onload = (e) => {
+    reader.onload = e => {
       img.src = e.target.result;
       wrapper.appendChild(label);
       wrapper.appendChild(img);
@@ -55,20 +50,17 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.readAsDataURL(file);
   }
 
-  function attachSubmitHandler(){
-    if (!form) return;
-    form.addEventListener("submit", () => {
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.classList.add('disabled');
-        const spinner = document.createElement("span");
-        spinner.className = "loading";
-        spinner.innerHTML = `<span class="spinner" aria-hidden="true"></span><span class="helper">Analisi in corso...</span>`;
-        submitBtn.parentNode && submitBtn.parentNode.appendChild(spinner);
-      }
-    });
-  }
+  if (form) form.addEventListener("submit", () => {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('disabled');
+      const spinner = document.createElement("span");
+      spinner.className = "loading";
+      spinner.innerHTML = `<span class="spinner" aria-hidden="true"></span><span class="helper">Analisi in corso...</span>`;
+      submitBtn.parentNode && submitBtn.parentNode.appendChild(spinner);
+    }
+  });
 
   async function initResultInteractions(){
     if (!resultImage) return;
@@ -80,17 +72,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return await new Promise((resolve, reject) => {
         const tmp = new Image();
         tmp.crossOrigin = "anonymous";
-        tmp.onload = () => {
-          try { const canvas = document.createElement("canvas"); canvas.width = tmp.naturalWidth; canvas.height = tmp.naturalHeight; canvas.getContext("2d").drawImage(tmp, 0, 0); resolve(canvas.toDataURL("image/jpeg", 0.92)); }
-          catch (err) { reject(err); }
-        };
-        tmp.onerror = (e) => reject(e);
+        tmp.onload = () => { try { const canvas = document.createElement("canvas"); canvas.width = tmp.naturalWidth; canvas.height = tmp.naturalHeight; canvas.getContext("2d").drawImage(tmp, 0, 0); resolve(canvas.toDataURL("image/jpeg", 0.92)); } catch (err) { reject(err); } };
+        tmp.onerror = e => reject(e);
         tmp.src = imgEl.src;
       });
     }
 
     if (downloadBtn){
-      downloadBtn.addEventListener("click", async (e) => {
+      downloadBtn.addEventListener("click", async e => {
         e.preventDefault();
         downloadBtn.disabled = true;
         downloadBtn.textContent = "Preparazione PDF…";
@@ -120,26 +109,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.panzoom) { const pz = panzoom(resultImage, { maxScale: 8, minScale: 1, contain: 'outside' }); resultImage.addEventListener("dblclick", () => pz.zoomAbs(0,0,1)); }
   }
 
-  function initIntense(){ try{ new Intense(document.querySelectorAll('.intense')); } catch(e){/* ignore */ } }
+  if (typeof Intense !== "undefined") try{ new Intense(document.querySelectorAll('.intense')); } catch(e){}
 
-  function createThemeToggle(){
-    const btn = document.createElement("button");
-    btn.className = "btn secondary";
-    btn.style.marginLeft = "8px";
-    btn.textContent = "Dark";
-    btn.title = "Toggle theme";
-    const header = document.querySelector(".header");
-    if (header) header.appendChild(btn);
-    const apply = () => { btn.textContent = document.body.classList.contains("dark") ? "Light" : "Dark"; };
-    btn.addEventListener("click", () => { document.body.classList.toggle("dark"); apply(); });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add("dark");
-    apply();
-    return btn;
-  }
-
-  function initConfidenceChart(){
-    const chartCanvas = document.getElementById("confidenceChart");
-    if (!chartCanvas) return;
+  const chartCanvas = document.getElementById("confidenceChart");
+  if (chartCanvas){
     const confidences = window.confidences || [];
     new Chart(chartCanvas.getContext("2d"), {
       type: "bar",
@@ -159,4 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  initResultInteractions();
 });
