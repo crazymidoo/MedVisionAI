@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fracture Detection</title>
+  <title>MedVisionAI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
@@ -21,11 +21,19 @@
       <div class="title">
         <div class="logo">FD</div>
         <div>
-          <h1>Fracture Detection</h1>
-          <small>Upload and analyze X-Ray images with YOLOv8</small>
+          <h1>MedVisionAI</h1>
+          <small>Detect Fractures Instantly</small>
         </div>
       </div>
     </div>
+
+    <div class="intro">
+      <p>Welcome to Fracture Detection, a cutting-edge platform for automated X-ray analysis. Using the advanced YOLOv8 model, this system can accurately identify bone fractures with impressive precision.</p>
+      <p>Anyone can upload an X-ray in JPG or PNG format and receive a full analysis in seconds. The service provides confidence scores and fracture probabilities, making it useful for professionals, students, researchers, or anyone curious about medical imaging.</p>
+      <p>Simply upload an image to instantly highlight potential fracture areas and generate detailed reports for further review. No prior experience is needed—complex AI-powered analysis is now accessible to everyone.</p>
+      <p>Try it now and discover how fast, reliable, and easy fracture detection can be!</p>
+    </div>
+
     <div class="grid">
       <div class="card">
         <form method="POST" enctype="multipart/form-data" id="upload-form">
