@@ -16,3 +16,5 @@ It includes both the **training pipeline** for the model and a **Flask-based int
 - Organized structure for `uploads/`, `results/`, and `saved_models/`
 
 ---
+
+## How to start
