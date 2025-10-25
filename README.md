@@ -17,4 +17,7 @@ It includes both the **training pipeline** for the model and a **Flask-based int
 
 ---
 
-## How to start
+## How to Run the Project
+* cd Cartella_Bone_Fractures
+* pip install flask ultralytics opencv-python werkzeug torch torchvision
+* python app.py
