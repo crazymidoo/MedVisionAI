@@ -7,7 +7,7 @@ It includes both the **training pipeline** for the model and a **Flask-based int
 
 ---
 
-## Features
+## Features 
 
 - **YOLOv8-based fracture detection**
 - **Upload X-ray images** via a simple Flask web app
