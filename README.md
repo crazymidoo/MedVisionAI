@@ -20,4 +20,12 @@ It includes both the **training pipeline** for the model and a **Flask-based int
 ## How to Run the Project
 * cd Cartella_Bone_Fractures
 * pip install flask ultralytics opencv-python werkzeug torch torchvision
+> ⚠️ For Codespaces, Docker, or WSL users.
+If you encounter an error like "ImportError: libGL.so.1: cannot open shared object file: No such file or directory"
+> it means some system libraries required by OpenCV are missing.
+Install them with:
+* sudo apt-get update
+* sudo apt-get install -y libgl1
+
+### Run the Flask app
 * python app.py
