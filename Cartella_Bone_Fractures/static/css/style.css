@@ -8,7 +8,7 @@
   --radius: 12px;
   --glass: rgba(255,255,255,0.6);
   --shadow: 0 6px 20px rgba(43, 47, 61, 0.08);
-  --max-width: 1100px;
+  --max-width: 1100px; 
 }
 
 .logo {
