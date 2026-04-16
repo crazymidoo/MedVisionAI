@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultImage = document.getElementById("result-image");
   const downloadBtn = document.getElementById("download-pdf");
   const toggleBtn = document.querySelector('.toggle-theme');
+  const kpiPills = Array.from(document.querySelectorAll('.kpi-pill'));
   const chartCanvas = document.getElementById("confidenceChart");
   const initialPreviewMarkup = previewContainer ? previewContainer.innerHTML : "";
   let confidenceChart = null;
@@ -72,6 +73,29 @@ document.addEventListener("DOMContentLoaded", () => {
       updateButtonText();
       renderConfidenceChart();
     });
+  }
+
+  if (kpiPills.length) {
+    if ("IntersectionObserver" in window) {
+      const kpiObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            kpiObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.2, rootMargin: "0px 0px -8% 0px" });
+
+      kpiPills.forEach((pill, index) => {
+        pill.style.transitionDelay = `${index * 80}ms`;
+        kpiObserver.observe(pill);
+      });
+    } else {
+      kpiPills.forEach((pill, index) => {
+        pill.style.transitionDelay = `${index * 80}ms`;
+        pill.classList.add("is-visible");
+      });
+    }
   }
 
   if (dropZone) {
