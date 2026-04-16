@@ -166,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let camera = null;
     let controls = null;
     let frameId = null;
+    let boneModel = null;
 
     const closeTargets = Array.from(viewer3dModal.querySelectorAll('[data-close-3d]'));
 
@@ -247,7 +248,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);
-      if (controls) controls.update();
+      if (controls) {
+        controls.update();
+      } else if (boneModel && boneModel.userData.autoRotate) {
+        boneModel.rotation.x += 0.004;
+        boneModel.rotation.y += 0.006;
+      }
       if (scene && camera && renderer) renderer.render(scene, camera);
     };
 
@@ -284,18 +290,31 @@ document.addEventListener("DOMContentLoaded", () => {
       fill.position.set(-3, -2, 4);
       scene.add(fill);
 
-      scene.add(buildBoneModel());
+      boneModel = buildBoneModel();
+      scene.add(boneModel);
 
-      if (THREE.OrbitControls) {
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
+      if (typeof OrbitControls !== "undefined") {
+        controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.07;
         controls.minDistance = 6;
         controls.maxDistance = 18;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 2.8;
+      } else {
+        console.warn("OrbitControls non caricato, uso fallback auto-rotation");
+        boneModel.userData.autoRotate = true;
       }
 
       handleResize();
       window.addEventListener("resize", handleResize);
+      
+      if (renderer && renderer.domElement) {
+        renderer.domElement.addEventListener("mousedown", onMouseDown);
+        renderer.domElement.addEventListener("mouseup", onMouseUp);
+        renderer.domElement.addEventListener("mousemove", onMouseMove);
+      }
+      
       animate();
     };
 
@@ -303,7 +322,28 @@ document.addEventListener("DOMContentLoaded", () => {
       viewer3dModal.classList.remove("open");
       viewer3dModal.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener("mousedown", onMouseDown);
+        renderer.domElement.removeEventListener("mouseup", onMouseUp);
+        renderer.domElement.removeEventListener("mousemove", onMouseMove);
+      }
       stopViewer();
+    };
+
+    let mouseDown = false;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    const onMouseDown = (e) => { mouseDown = true; mouseX = e.clientX; mouseY = e.clientY; };
+    const onMouseUp = () => { mouseDown = false; };
+    const onMouseMove = (e) => {
+      if (!mouseDown || !boneModel || controls) return;
+      const deltaX = e.clientX - mouseX;
+      const deltaY = e.clientY - mouseY;
+      boneModel.rotation.x += deltaY * 0.005;
+      boneModel.rotation.y += deltaX * 0.005;
+      mouseX = e.clientX;
+      mouseY = e.clientY;
     };
 
     viewer3dButton.addEventListener("click", openViewer);
