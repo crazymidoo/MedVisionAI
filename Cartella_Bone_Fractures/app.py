@@ -76,5 +76,13 @@ def send_upload(filename):
 def send_result(filename):
     return send_from_directory(RESULT_FOLDER, filename)
 
+@app.route("/signin")
+def signin():
+    return "Sign In page"
+
+@app.route("/signup")
+def signup():
+    return "Sign Up page"
+
 if __name__ == "__main__":
     app.run(debug=True)
