@@ -11,6 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js" defer></script>
   <script>
     window.confidences = {{ confidences | tojson | safe }};
   </script>
@@ -141,7 +143,9 @@
               </div>
               <div class="actions">
                 <button id="download-pdf" class="btn" style="width:100%;">📄 Download PDF</button>
+                <button id="view-3d" class="btn secondary" style="width:100%;">🦴 View 3D</button>
               </div>
+              <p class="assistive-note">3D Viewer is an illustrative visualization and not a diagnostic reconstruction.</p>
             </div>
           </div>
           {% else %}
@@ -181,6 +185,23 @@
         <a href="mailto:ahmedmoustafadev@gmail.com">ahmedmoustafadev@gmail.com</a>
       </div>
     </footer>
+  </div>
+
+  <div id="viewer3d-modal" class="viewer3d-modal" aria-hidden="true">
+    <div class="viewer3d-overlay" data-close-3d></div>
+    <div class="viewer3d-card" role="dialog" aria-modal="true" aria-labelledby="viewer3d-title">
+      <div class="viewer3d-header">
+        <h3 id="viewer3d-title">3D Bone Viewer</h3>
+        <button id="close-3d" class="btn secondary" type="button">Close</button>
+      </div>
+      <div class="viewer3d-canvas-wrap">
+        <div id="viewer3d-canvas" class="viewer3d-canvas"></div>
+      </div>
+      <div class="viewer3d-footer">
+        <span>Drag to rotate, scroll to zoom, right click to pan.</span>
+        <span class="assistive-note">Illustrative visualization only.</span>
+      </div>
+    </div>
   </div>
 </body>
 </html>

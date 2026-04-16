@@ -444,8 +444,79 @@ section p + p{margin-top:10px;}
   color:#12344f;
 }
 
-.actions{display:flex;gap:8px;align-items:center;}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 #download-pdf{width:100%;}
+
+.assistive-note{
+  margin:10px 0 0;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+.viewer3d-modal{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  display:none;
+}
+
+.viewer3d-modal.open{display:block;}
+
+.viewer3d-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(10, 18, 33, 0.62);
+  backdrop-filter:blur(3px);
+}
+
+.viewer3d-card{
+  position:relative;
+  width:min(900px, calc(100% - 24px));
+  margin:32px auto;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--card);
+  box-shadow:var(--shadow-lift);
+  overflow:hidden;
+}
+
+.viewer3d-header,
+.viewer3d-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+
+.viewer3d-header h3{
+  margin:0;
+  font-size:18px;
+  letter-spacing:-0.02em;
+}
+
+.viewer3d-footer{
+  border-bottom:none;
+  border-top:1px solid var(--border);
+  font-size:12px;
+  color:var(--muted);
+}
+
+.viewer3d-canvas-wrap{
+  padding:12px;
+  background:linear-gradient(180deg, rgba(244,249,255,0.94), rgba(238,245,252,0.92));
+}
+
+.viewer3d-canvas{
+  width:100%;
+  height:min(62vh, 520px);
+  min-height:320px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--border);
+}
 
 .loading{display:inline-flex;align-items:center;gap:10px;margin-left:8px;}
 .spinner{
@@ -548,6 +619,14 @@ body.dark .footer-brand span,
 body.dark .footer-contact span,
 body.dark .kv{color:var(--muted);}
 
+body.dark .viewer3d-canvas-wrap{
+  background:linear-gradient(180deg, #101d30, #0e1828);
+}
+
+body.dark .viewer3d-overlay{
+  background:rgba(6, 10, 18, 0.72);
+}
+
 body.dark .menu ul li + li::before{background:rgba(161,175,193,0.42);}
 body.dark .meta .value{color:#d6e8ff;}
 
@@ -573,6 +652,10 @@ body.dark .meta .value{color:#d6e8ff;}
   #drop-zone{min-height:170px;}
   .controls{flex-direction:column;align-items:stretch;}
   .btn,#download-pdf{width:100%;}
+  .viewer3d-card{margin:12px auto;}
+  .viewer3d-header,.viewer3d-footer{padding:12px;}
+  .viewer3d-footer{flex-direction:column;align-items:flex-start;}
+  .viewer3d-canvas{height:min(56vh, 440px);min-height:280px;}
 }
 
 @media(max-width:520px){

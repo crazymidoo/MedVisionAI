@@ -8,6 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.querySelector('.toggle-theme');
   const kpiPills = Array.from(document.querySelectorAll('.kpi-pill'));
   const chartCanvas = document.getElementById("confidenceChart");
+  const viewer3dButton = document.getElementById("view-3d");
+  const viewer3dModal = document.getElementById("viewer3d-modal");
+  const viewer3dCanvas = document.getElementById("viewer3d-canvas");
+  const close3dButton = document.getElementById("close-3d");
   const initialPreviewMarkup = previewContainer ? previewContainer.innerHTML : "";
   let confidenceChart = null;
 
@@ -154,6 +158,162 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  function init3DViewer() {
+    if (!viewer3dButton || !viewer3dModal || !viewer3dCanvas) return;
+
+    let renderer = null;
+    let scene = null;
+    let camera = null;
+    let controls = null;
+    let frameId = null;
+
+    const closeTargets = Array.from(viewer3dModal.querySelectorAll('[data-close-3d]'));
+
+    const getFractureIntensity = () => {
+      const confidences = window.confidences || [];
+      if (!confidences.length) return 0.55;
+      const avg = confidences.reduce((sum, val) => sum + val, 0) / confidences.length;
+      return Math.max(0.35, Math.min(0.95, avg));
+    };
+
+    const buildBoneModel = () => {
+      const group = new THREE.Group();
+      const intensity = getFractureIntensity();
+
+      const boneMaterial = new THREE.MeshStandardMaterial({
+        color: 0xecf3ff,
+        roughness: 0.42,
+        metalness: 0.05
+      });
+
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.46, 7.2, 48), boneMaterial);
+      shaft.rotation.z = 0.12;
+      group.add(shaft);
+
+      const headTop = new THREE.Mesh(new THREE.SphereGeometry(0.95, 42, 28), boneMaterial);
+      headTop.position.set(0.18, 3.45, 0);
+      group.add(headTop);
+
+      const headBottom = new THREE.Mesh(new THREE.SphereGeometry(0.84, 42, 28), boneMaterial);
+      headBottom.position.set(-0.09, -3.25, 0);
+      group.add(headBottom);
+
+      const fractureArc = new THREE.TorusGeometry(0.73, 0.05 + intensity * 0.025, 12, 64, Math.PI * (0.9 + intensity * 0.4));
+      const fractureMat = new THREE.MeshStandardMaterial({
+        color: 0xff4d4f,
+        emissive: 0xb82022,
+        emissiveIntensity: 0.35 + intensity * 0.45,
+        roughness: 0.34
+      });
+      const crack = new THREE.Mesh(fractureArc, fractureMat);
+      crack.position.set(0.02, -0.4, 0.15);
+      crack.rotation.set(0.2, 0.6, 0.2);
+      group.add(crack);
+
+      const glow = new THREE.PointLight(0xff7a7b, 0.8 + intensity, 4.2);
+      glow.position.set(0.85, -0.15, 1.2);
+      group.add(glow);
+
+      return group;
+    };
+
+    const handleResize = () => {
+      if (!renderer || !camera) return;
+      const width = viewer3dCanvas.clientWidth;
+      const height = viewer3dCanvas.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    };
+
+    const stopViewer = () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = null;
+
+      if (controls) controls.dispose();
+      controls = null;
+
+      if (renderer) {
+        renderer.dispose();
+        if (renderer.domElement && renderer.domElement.parentNode === viewer3dCanvas) {
+          viewer3dCanvas.removeChild(renderer.domElement);
+        }
+      }
+      renderer = null;
+      scene = null;
+      camera = null;
+      window.removeEventListener("resize", handleResize);
+    };
+
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      if (controls) controls.update();
+      if (scene && camera && renderer) renderer.render(scene, camera);
+    };
+
+    const openViewer = () => {
+      if (typeof THREE === "undefined") {
+        alert("Viewer 3D non disponibile al momento.");
+        return;
+      }
+      if (renderer) return;
+
+      viewer3dModal.classList.add("open");
+      viewer3dModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(document.body.classList.contains("dark") ? 0x0f1a2b : 0xeff6ff);
+
+      camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+      camera.position.set(0, 0, 10.5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      viewer3dCanvas.appendChild(renderer.domElement);
+
+      const ambient = new THREE.HemisphereLight(0xe6f2ff, 0x203045, 1.05);
+      scene.add(ambient);
+
+      const key = new THREE.DirectionalLight(0xffffff, 1.2);
+      key.position.set(4, 4, 6);
+      scene.add(key);
+
+      const fill = new THREE.DirectionalLight(0xaad4ff, 0.55);
+      fill.position.set(-3, -2, 4);
+      scene.add(fill);
+
+      scene.add(buildBoneModel());
+
+      if (THREE.OrbitControls) {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.07;
+        controls.minDistance = 6;
+        controls.maxDistance = 18;
+      }
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      animate();
+    };
+
+    const closeViewer = () => {
+      viewer3dModal.classList.remove("open");
+      viewer3dModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      stopViewer();
+    };
+
+    viewer3dButton.addEventListener("click", openViewer);
+    closeTargets.forEach(node => node.addEventListener("click", closeViewer));
+    if (close3dButton) close3dButton.addEventListener("click", closeViewer);
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && viewer3dModal.classList.contains("open")) closeViewer();
+    });
+  }
+
   async function initResultInteractions(){
     if (!resultImage) return;
     resultImage.style.cursor = "grab";
@@ -204,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof Intense !== "undefined") try{ new Intense(document.querySelectorAll('.intense')); } catch(e){}
 
   renderConfidenceChart();
+  init3DViewer();
 
   initResultInteractions();
 });
