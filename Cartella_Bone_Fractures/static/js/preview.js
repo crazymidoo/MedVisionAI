@@ -2,16 +2,76 @@ document.addEventListener("DOMContentLoaded", () => {
   const dropZone = document.getElementById("drop-zone");
   const fileInput = document.getElementById("file-input");
   const previewContainer = document.getElementById("preview-container");
-  const form = fileInput.closest("form");
+  const form = fileInput ? fileInput.closest("form") : null;
   const resultImage = document.getElementById("result-image");
   const downloadBtn = document.getElementById("download-pdf");
   const toggleBtn = document.querySelector('.toggle-theme');
+  const chartCanvas = document.getElementById("confidenceChart");
+  const initialPreviewMarkup = previewContainer ? previewContainer.innerHTML : "";
+  let confidenceChart = null;
+
+  const getChartTheme = () => {
+    const dark = document.body.classList.contains("dark");
+    return {
+      bars: dark ? "rgba(88, 169, 255, 0.72)" : "rgba(43, 143, 230, 0.72)",
+      tick: dark ? "#a7bbd4" : "#5b6f88",
+      grid: dark ? "rgba(167,187,212,0.20)" : "rgba(91,111,136,0.18)",
+      tooltipBg: dark ? "#0f1a2a" : "#ffffff",
+      tooltipText: dark ? "#dbe8f8" : "#162133"
+    };
+  };
+
+  const renderConfidenceChart = () => {
+    if (!chartCanvas || typeof Chart === "undefined") return;
+    const confidences = window.confidences || [];
+    if (!confidences.length) return;
+    if (confidenceChart) confidenceChart.destroy();
+
+    const palette = getChartTheme();
+    confidenceChart = new Chart(chartCanvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: confidences.map((_, i) => `Box ${i + 1}`),
+        datasets: [{
+          label: "Confidence",
+          data: confidences,
+          backgroundColor: confidences.map(() => palette.bars),
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: palette.tooltipBg,
+            titleColor: palette.tooltipText,
+            bodyColor: palette.tooltipText,
+            callbacks: { label: ctx => (ctx.raw * 100).toFixed(1) + "%" }
+          }
+        },
+        scales: {
+          x: { ticks: { color: palette.tick }, grid: { color: palette.grid } },
+          y: {
+            min: 0,
+            max: 1,
+            ticks: { color: palette.tick, callback: v => (v * 100).toFixed(0) + "%" },
+            grid: { color: palette.grid }
+          }
+        }
+      }
+    });
+  };
 
   if (toggleBtn) {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add("dark");
     const updateButtonText = () => { toggleBtn.textContent = document.body.classList.contains("dark") ? "Light" : "Dark"; };
     updateButtonText();
-    toggleBtn.addEventListener("click", () => { document.body.classList.toggle("dark"); updateButtonText(); });
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      updateButtonText();
+      renderConfidenceChart();
+    });
   }
 
   if (dropZone) {
@@ -26,7 +86,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (fileInput) fileInput.addEventListener("change", () => { if (fileInput.files.length) showPreview(fileInput.files[0]); });
+  if (fileInput) {
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) {
+        showPreview(fileInput.files[0]);
+      } else if (previewContainer) {
+        previewContainer.innerHTML = initialPreviewMarkup;
+      }
+    });
+  }
 
   function showPreview(file){
     if (!file) return;
@@ -111,27 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (typeof Intense !== "undefined") try{ new Intense(document.querySelectorAll('.intense')); } catch(e){}
 
-  const chartCanvas = document.getElementById("confidenceChart");
-  if (chartCanvas){
-    const confidences = window.confidences || [];
-    new Chart(chartCanvas.getContext("2d"), {
-      type: "bar",
-      data: {
-        labels: confidences.map((_,i) => `Box ${i+1}`),
-        datasets: [{
-          label: "Confidence",
-          data: confidences,
-          backgroundColor: confidences.map(v => `rgba(43, 143, 230, 0.7)`),
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => (ctx.raw*100).toFixed(1)+"%" } } },
-        scales: { y: { min:0, max:1, ticks:{ callback: v => (v*100).toFixed(0)+"%" } } }
-      }
-    });
-  }
+  renderConfidenceChart();
 
   initResultInteractions();
 });

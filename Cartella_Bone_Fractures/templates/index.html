@@ -47,11 +47,34 @@
   </br>
 
     <main>
-      <section id="intro">
+      <section id="intro" class="hero-section">
+        <div class="hero-eyebrow">AI Powered Radiology Support</div>
         <h2>Welcome to Fracture Detection</h2>
         <p>A smart platform designed to make understanding X-rays easier for everyone. Advanced AI highlights potential fractures in just seconds, offering clear and easy-to-read results.</p>
         <p>Whether you are a medical professional, a student, a researcher, or simply curious about medical imaging, this platform provides a quick and reliable way to explore X-ray images. No prior experience is needed—complex analysis is now simple and accessible.</p>
         <p>Discover how technology can help you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
+        <a href="#demo" class="btn hero-cta">Try Live Demo</a>
+      </section>
+
+      <section id="kpi" class="kpi-section">
+        <div class="kpi-grid">
+          <div class="kpi-pill">
+            <span class="kpi-value">~2.1s</span>
+            <span class="kpi-label">Average Analysis Time</span>
+          </div>
+          <div class="kpi-pill">
+            <span class="kpi-value">24/7</span>
+            <span class="kpi-label">Continuous Availability</span>
+          </div>
+          <div class="kpi-pill">
+            <span class="kpi-value">CPU Ready</span>
+            <span class="kpi-label">Runs on Lightweight Hardware</span>
+          </div>
+          <div class="kpi-pill">
+            <span class="kpi-value">JPG / PNG</span>
+            <span class="kpi-label">Fast Upload Support</span>
+          </div>
+        </div>
       </section>
 
       <section id="how">
@@ -82,14 +105,27 @@
                 <span class="kv">YOLOv8 Analysis</span>
               </div>
             </form>
-            <div id="preview-container"></div>
+            <div id="preview-container">
+              <div class="empty-state" id="preview-empty-state">
+                <div class="empty-icon">🩻</div>
+                <div class="empty-title">No Image Selected Yet</div>
+                <div class="empty-text">Drop an X-ray file above to preview it here before analysis.</div>
+              </div>
+            </div>
           </div>
           {% if original_image and result_image %}
           <div class="sidepanel">
-            <div class="card result">
-              <div class="label">Analysis Result</div>
-              <div id="result-container">
-                <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image" class="intense" data-intense>
+            <div class="card result compare-card">
+              <div class="label">Before / After Comparison</div>
+              <div class="compare-grid" id="result-container">
+                <div class="compare-item">
+                  <div class="compare-label">Original</div>
+                  <img src="{{ url_for('send_upload', filename=original_image) }}" alt="Original Image" class="intense" data-intense>
+                </div>
+                <div class="compare-item">
+                  <div class="compare-label">AI Detection</div>
+                  <img src="{{ url_for('send_result', filename=result_image) }}" id="result-image" alt="Result Image" class="intense" data-intense>
+                </div>
               </div>
             </div>
             <div class="card meta">
@@ -110,6 +146,16 @@
               </div>
             </div>
           </div>
+          {% else %}
+          <div class="sidepanel">
+            <div class="card empty-result">
+              <div class="empty-state">
+                <div class="empty-icon">✨</div>
+                <div class="empty-title">Result Panel Ready</div>
+                <div class="empty-text">Your analyzed image and confidence chart will appear here right after upload.</div>
+              </div>
+            </div>
+          </div>
           {% endif %}
         </div>
       </section>
@@ -122,6 +168,25 @@
         <p>MedVisionAI is a team of developers and medical professionals dedicated to making fracture detection faster, simpler, and more accessible through AI technology.</p>
       </section>
     </main>
+
+    <footer class="site-footer" id="footer">
+      <div class="footer-brand">
+        <img src="{{ url_for('static', filename='Logo/logo.jpg') }}" alt="MedVisionAI Logo">
+        <div>
+          <strong>MedVisionAI</strong>
+          <span>Smart Fracture Detection Support</span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="#intro">Home</a>
+        <a href="#demo">Demo</a>
+        <a href="#about">About</a>
+      </div>
+      <div class="footer-contact">
+        <span>Contact</span>
+        <a href="mailto:contact@medvisionai.ai">contact@medvisionai.ai</a>
+      </div>
+    </footer>
   </div>
 </body>
 </html>
