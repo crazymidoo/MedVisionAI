@@ -313,6 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.domElement.addEventListener("mousedown", onMouseDown);
         renderer.domElement.addEventListener("mouseup", onMouseUp);
         renderer.domElement.addEventListener("mousemove", onMouseMove);
+        renderer.domElement.addEventListener("wheel", onMouseWheel, { passive: false });
       }
       
       animate();
@@ -326,6 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.domElement.removeEventListener("mousedown", onMouseDown);
         renderer.domElement.removeEventListener("mouseup", onMouseUp);
         renderer.domElement.removeEventListener("mousemove", onMouseMove);
+        renderer.domElement.removeEventListener("wheel", onMouseWheel);
       }
       stopViewer();
     };
@@ -344,6 +346,14 @@ document.addEventListener("DOMContentLoaded", () => {
       boneModel.rotation.y += deltaX * 0.005;
       mouseX = e.clientX;
       mouseY = e.clientY;
+    };
+    const onMouseWheel = (e) => {
+      if (!camera) return;
+      e.preventDefault();
+      const zoomSpeed = 0.1;
+      const direction = e.deltaY > 0 ? 1 : -1;
+      const currentZ = camera.position.z;
+      camera.position.z = Math.max(6, Math.min(18, currentZ + zoomSpeed * direction));
     };
 
     viewer3dButton.addEventListener("click", openViewer);
