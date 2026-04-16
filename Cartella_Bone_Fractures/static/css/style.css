@@ -56,7 +56,8 @@ body{
   background:transparent;
 }
 
-.header{
+.header,
+.site-header{
   display:flex;
   flex-direction:column;
   align-items:flex-start;
@@ -67,6 +68,8 @@ body{
 .logo-title{
   display:flex;
   align-items:center;
+  justify-content:space-between;
+  width:100%;
   gap:16px;
 }
 
@@ -205,6 +208,7 @@ h1{font-size:20px;margin:0}
   box-shadow:none;
 }
 
+.btn:hover{transform:scale(1.03)}
 .btn:active{transform:translateY(1px)}
 .kv{font-size:13px;color:var(--muted)}
 
@@ -291,13 +295,11 @@ h1{font-size:20px;margin:0}
 }
 
 .top-actions{
-  position:fixed;
-  top:50px;
-  right:80px;
+  position:static;
   display:flex;
   align-items:center;
   gap:10px;
-  z-index:9999;
+  margin-left:auto;
 }
 
 .top-action-btn{
@@ -308,6 +310,7 @@ h1{font-size:20px;margin:0}
   position:static;
   top:auto;
   right:auto;
+  margin-left:12px;
   padding:10px 16px;
   background:var(--accent);
   color:#fff;
@@ -434,8 +437,6 @@ h1{font-size:20px;margin:0}
   }
 
   .top-actions{
-    top:16px;
-    right:12px;
     gap:8px;
   }
 
@@ -477,6 +478,7 @@ h1{font-size:20px;margin:0}
   }
 
   .toggle-theme{padding:8px 12px;border-radius:999px;}
+  .toggle-theme{margin-left:10px;}
 }
 
 @media(max-width:480px){
@@ -525,17 +527,15 @@ h1{font-size:20px;margin:0}
     max-height:260px;
   }
 
-  .top-actions{
-    top:12px;
-    right:10px;
-    gap:6px;
-  }
+  .top-actions{gap:6px;}
 
   .top-actions .btn,
   .top-actions .top-action-btn{
     padding:7px 10px;
     font-size:12px;
   }
+
+  .toggle-theme{margin-left:8px;}
 }
 
 body.dark{
