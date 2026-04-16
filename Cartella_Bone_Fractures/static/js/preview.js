@@ -367,9 +367,6 @@ document.addEventListener("DOMContentLoaded", () => {
       frameId = requestAnimationFrame(animate);
       if (controls) {
         controls.update();
-      } else if (boneModel && boneModel.userData.autoRotate) {
-        boneModel.rotation.x += 0.004;
-        boneModel.rotation.y += 0.006;
       }
       if (scene && camera && renderer) renderer.render(scene, camera);
     };
@@ -446,13 +443,10 @@ document.addEventListener("DOMContentLoaded", () => {
         controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.07;
-        controls.minDistance = 6;
-        controls.maxDistance = 18;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 2.8;
-      } else {
-        console.warn("OrbitControls non caricato, uso fallback auto-rotation");
-        boneModel.userData.autoRotate = true;
+        controls.minDistance = 5.5;
+        controls.maxDistance = 22;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
       }
 
       handleResize();
@@ -484,6 +478,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let mouseDown = false;
     let mouseX = 0;
     let mouseY = 0;
+    let rotationQuat = new THREE.Quaternion();
+    let axis = new THREE.Vector3(0, 1, 0);
 
     const onMouseDown = (e) => { mouseDown = true; mouseX = e.clientX; mouseY = e.clientY; };
     const onMouseUp = () => { mouseDown = false; };
@@ -491,18 +487,35 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!mouseDown || !boneModel || controls) return;
       const deltaX = e.clientX - mouseX;
       const deltaY = e.clientY - mouseY;
-      boneModel.rotation.x += deltaY * 0.005;
-      boneModel.rotation.y += deltaX * 0.005;
+      
+      // Rotazione tramite quaternioni per libertà completa 360°
+      const rotSpeed = 0.008;
+      
+      // Rotazione attorno asse Y (movement X del mouse)
+      if (Math.abs(deltaX) > 0) {
+        const qY = new THREE.Quaternion();
+        qY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * rotSpeed);
+        rotationQuat.multiplyQuaternions(qY, rotationQuat);
+      }
+      
+      // Rotazione attorno asse X locale (movement Y del mouse)
+      if (Math.abs(deltaY) > 0) {
+        const qX = new THREE.Quaternion();
+        qX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * rotSpeed);
+        rotationQuat.multiplyQuaternions(qX, rotationQuat);
+      }
+      
+      boneModel.quaternion.copy(rotationQuat);
       mouseX = e.clientX;
       mouseY = e.clientY;
     };
     const onMouseWheel = (e) => {
       if (!camera) return;
       e.preventDefault();
-      const zoomSpeed = 0.1;
+      const zoomSpeed = 0.35;
       const direction = e.deltaY > 0 ? 1 : -1;
       const currentZ = camera.position.z;
-      camera.position.z = Math.max(6, Math.min(18, currentZ + zoomSpeed * direction));
+      camera.position.z = Math.max(5.5, Math.min(22, currentZ + zoomSpeed * direction));
     };
 
     viewer3dButton.addEventListener("click", openViewer);
