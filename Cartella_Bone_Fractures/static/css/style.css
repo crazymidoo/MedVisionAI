@@ -194,7 +194,7 @@ section{
 
 section h2{
   margin:0 0 10px;
-  font-size:clamp(21px, 2.4vw, 30px);
+  font-size:clamp(18px, 1.9vw, 24px);
   line-height:1.12;
   letter-spacing:-0.03em;
 }
@@ -242,29 +242,33 @@ section p + p{margin-top:10px;}
 
 .kpi-grid{
   display:grid;
-  gap:12px;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  grid-template-columns:repeat(4,minmax(190px,1fr));
 }
 
 .kpi-pill{
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px 14px;
+  border-radius:16px;
+  padding:16px 18px;
+  min-height:112px;
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:6px;
+  justify-content:center;
   box-shadow:0 8px 18px rgba(28, 54, 89, 0.08);
 }
 
 .kpi-value{
-  font-size:17px;
+  font-size:22px;
   font-weight:700;
   color:var(--accent-600);
+  line-height:1.1;
 }
 
 .kpi-label{
-  font-size:12px;
+  font-size:14px;
+  line-height:1.35;
   color:var(--muted);
 }
 
