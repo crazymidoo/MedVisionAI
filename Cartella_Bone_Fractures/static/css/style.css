@@ -147,6 +147,7 @@ h1{font-size:20px;margin:0}
 #drop-zone{
   border-radius:10px;
   padding:20px;
+  min-height:210px;
   border:2px dashed rgba(20,30,40,0.06);
   background:linear-gradient(180deg, rgba(250,252,255,0.9), #fff);
   transition:all .18s ease;
@@ -154,6 +155,7 @@ h1{font-size:20px;margin:0}
   display:flex;
   gap:12px;
   align-items:center;
+  justify-content:flex-start;
 }
 
 #drop-zone.dragover{
