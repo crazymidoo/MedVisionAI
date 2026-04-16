@@ -27,7 +27,7 @@ body{
     linear-gradient(180deg, #f8fbff 0%, var(--bg) 55%, #eef4fb 100%);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  padding:36px 20px 48px;
+  padding:36px 20px 88px;
   display:flex;
   justify-content:center;
   align-items:flex-start;
@@ -194,9 +194,13 @@ section{
 
 section h2{
   margin:0 0 10px;
-  font-size:clamp(24px, 3vw, 34px);
+  font-size:clamp(21px, 2.4vw, 30px);
   line-height:1.12;
   letter-spacing:-0.03em;
+}
+
+.hero-section h2{
+  font-size:clamp(28px, 4vw, 42px);
 }
 
 section p{
@@ -428,21 +432,19 @@ section p + p{margin-top:10px;}
   padding:20px 4px 8px;
   display:grid;
   gap:16px;
-  grid-template-columns:1.2fr 1fr 1fr;
+  grid-template-columns:1.2fr 1fr;
   align-items:center;
 }
 
 .footer-brand{
   display:flex;
   align-items:center;
+  justify-content:center;
   gap:10px;
 }
 
-.footer-brand img{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  object-fit:cover;
+.footer-logo{
+  flex:0 0 auto;
 }
 
 .footer-brand strong{display:block;font-size:14px;}
