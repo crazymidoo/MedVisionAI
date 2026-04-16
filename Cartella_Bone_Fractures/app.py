@@ -27,6 +27,7 @@ def index():
     result_image = None
     accuracy = None
     confidences = []
+    fracture_boxes = []
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -44,6 +45,8 @@ def index():
         img_pred = img.copy()
         max_score = 0.0
         threshold = 0.05
+        
+        img_h, img_w = img.shape[:2]
 
         for box in results.boxes.data.tolist():
             x1, y1, x2, y2, score, class_id = box
@@ -51,6 +54,17 @@ def index():
                 max_score = max(max_score, score)
                 confidences.append(round(float(score), 2))
                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
+                
+                norm_x1, norm_y1 = x1 / img_w, y1 / img_h
+                norm_x2, norm_y2 = x2 / img_w, y2 / img_h
+                fracture_boxes.append({
+                    "x1": round(norm_x1, 3),
+                    "y1": round(norm_y1, 3),
+                    "x2": round(norm_x2, 3),
+                    "y2": round(norm_y2, 3),
+                    "score": round(float(score), 3)
+                })
+                
                 class_name = CLASS_NAMES[int(class_id)]
                 cv2.rectangle(img_pred, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 cv2.putText(img_pred, class_name, (x1, y1 - 10),
@@ -62,11 +76,13 @@ def index():
         result_image = filename
 
     confidences = confidences or []
+    fracture_boxes = fracture_boxes or []
     return render_template("index.html",
                            original_image=original_image,
                            result_image=result_image,
                            accuracy=accuracy,
-                           confidences=confidences)
+                           confidences=confidences,
+                           fracture_boxes=fracture_boxes)
 
 @app.route("/uploads/<filename>")
 def send_upload(filename):

@@ -170,50 +170,167 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const closeTargets = Array.from(viewer3dModal.querySelectorAll('[data-close-3d]'));
 
-    const getFractureIntensity = () => {
-      const confidences = window.confidences || [];
-      if (!confidences.length) return 0.55;
-      const avg = confidences.reduce((sum, val) => sum + val, 0) / confidences.length;
-      return Math.max(0.35, Math.min(0.95, avg));
-    };
-
     const buildBoneModel = () => {
       const group = new THREE.Group();
-      const intensity = getFractureIntensity();
+      const fractureBoxes = window.fractureBoxes || [];
 
+      // Materiale osso realistico (avorio/beige chiaro)
       const boneMaterial = new THREE.MeshStandardMaterial({
-        color: 0xecf3ff,
-        roughness: 0.42,
-        metalness: 0.05
+        color: 0xe8dcc8,
+        roughness: 0.65,
+        metalness: 0,
+        map: null,
+        side: THREE.FrontSide
       });
 
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.46, 7.2, 48), boneMaterial);
-      shaft.rotation.z = 0.12;
+      // Costruisci shaft dell'osso con forma più realistica
+      const shaftGeo = new THREE.LatheGeometry(
+        [
+          new THREE.Vector2(0, 0),
+          new THREE.Vector2(0.55, 0),
+          new THREE.Vector2(0.62, 1.5),
+          new THREE.Vector2(0.68, 3.0),
+          new THREE.Vector2(0.72, 5.0),
+          new THREE.Vector2(0.68, 6.0),
+          new THREE.Vector2(0.58, 7.0),
+          new THREE.Vector2(0.45, 7.8),
+          new THREE.Vector2(0.38, 8.0),
+          new THREE.Vector2(0.0, 8.0)
+        ],
+        128
+      );
+      shaftGeo.computeVertexNormals();
+      const shaft = new THREE.Mesh(shaftGeo, boneMaterial);
+      shaft.position.y = -3.0;
       group.add(shaft);
 
-      const headTop = new THREE.Mesh(new THREE.SphereGeometry(0.95, 42, 28), boneMaterial);
-      headTop.position.set(0.18, 3.45, 0);
+      // Aggiungi trama procedurale
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#e8dcc8";
+      ctx.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 800; i++) {
+        ctx.strokeStyle = `rgba(180,165,140,${Math.random() * 0.15})`;
+        ctx.lineWidth = Math.random() * 0.5;
+        const x1 = Math.random() * 256;
+        const y1 = Math.random() * 256;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x1 + Math.random() * 40 - 20, y1 + Math.random() * 40 - 20);
+        ctx.stroke();
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      boneMaterial.map = texture;
+      boneMaterial.needsUpdate = true;
+
+      // Articolazioni (epifisi)
+      const articEpiseMat = new THREE.MeshStandardMaterial({
+        color: 0xd4c9b8,
+        roughness: 0.55,
+        metalness: 0.02
+      });
+
+      const headTopGeo = new THREE.SphereGeometry(0.95, 48, 24);
+      const headTop = new THREE.Mesh(headTopGeo, articEpiseMat);
+      headTop.position.set(0, 4.8, 0);
       group.add(headTop);
 
-      const headBottom = new THREE.Mesh(new THREE.SphereGeometry(0.84, 42, 28), boneMaterial);
-      headBottom.position.set(-0.09, -3.25, 0);
+      const headBottomGeo = new THREE.SphereGeometry(0.82, 48, 24);
+      const headBottom = new THREE.Mesh(headBottomGeo, articEpiseMat);
+      headBottom.position.set(0, -4.6, 0);
       group.add(headBottom);
 
-      const fractureArc = new THREE.TorusGeometry(0.73, 0.05 + intensity * 0.025, 12, 64, Math.PI * (0.9 + intensity * 0.4));
-      const fractureMat = new THREE.MeshStandardMaterial({
-        color: 0xff4d4f,
-        emissive: 0xb82022,
-        emissiveIntensity: 0.35 + intensity * 0.45,
-        roughness: 0.34
-      });
-      const crack = new THREE.Mesh(fractureArc, fractureMat);
-      crack.position.set(0.02, -0.4, 0.15);
-      crack.rotation.set(0.2, 0.6, 0.2);
-      group.add(crack);
+      // Renderizza le fratture rilevate da AI
+      if (fractureBoxes.length > 0) {
+        fractureBoxes.forEach((box, idx) => {
+          const cx = (box.x1 + box.x2) / 2;
+          const cy = 1 - (box.y1 + box.y2) / 2;
+          
+          // Mappa su coordinate osso
+          const posX = (cx - 0.5) * 1.8;
+          const posY = (cy - 0.5) * 8.5 - 3;
+          const posZ = (Math.random() - 0.5) * 0.3;
+          
+          const fractureWidth = Math.abs(box.x2 - box.x1);
+          const fractureLen = Math.abs(box.y2 - box.y1);
+          
+          // Crepa: cilindro con estrusione lungo superficie osso
+          const crackGeo = new THREE.BufferGeometry();
+          const crackPoints = [];
+          const resolution = 32;
+          
+          for (let i = 0; i < resolution; i++) {
+            const t = i / (resolution - 1);
+            const depth = Math.sin(t * Math.PI) * (0.12 + box.score * 0.08);
+            const x = (t - 0.5) * (fractureWidth * 2.5) + posX;
+            const y = Math.sin(t * Math.PI * 2) * 0.04;
+            const z = posZ + depth;
+            crackPoints.push(x, posY + y, z);
+          }
+          
+          crackGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(crackPoints), 3));
+          crackGeo.computeVertexNormals();
+          
+          const crackMat = new THREE.MeshStandardMaterial({
+            color: 0x8b4513,
+            emissive: 0xff4444,
+            emissiveIntensity: 0.35 + box.score * 0.45,
+            roughness: 0.9,
+            metalness: 0,
+            side: THREE.DoubleSide
+          });
+          
+          const crack = new THREE.Line(crackGeo, new THREE.LineBasicMaterial({
+            color: 0xff6b5b,
+            linewidth: 3 + box.score * 2,
+            emissive: 0xff6b5b
+          }));
+          group.add(crack);
 
-      const glow = new THREE.PointLight(0xff7a7b, 0.8 + intensity, 4.2);
-      glow.position.set(0.85, -0.15, 1.2);
-      group.add(glow);
+          // Highlight zone attorno frattura
+          const highlightGeo = new THREE.CylinderGeometry(
+            0.55 + fractureWidth * 1.2,
+            0.55 + fractureWidth * 1.2,
+            fractureLen * 8,
+            32
+          );
+          
+          const highlightMat = new THREE.MeshStandardMaterial({
+            color: 0xff8873,
+            emissive: 0xff4444,
+            emissiveIntensity: 0.2 + box.score * 0.3,
+            transparent: true,
+            opacity: 0.08 + box.score * 0.12,
+            wireframe: false
+          });
+          
+          const highlight = new THREE.Mesh(highlightGeo, highlightMat);
+          highlight.position.copy(crack.position);
+          highlight.position.z = posZ;
+          group.add(highlight);
+        });
+      } else {
+        // Defaults: frattura illustrativa
+        const crackGeo = new THREE.BufferGeometry();
+        const crackPts = [];
+        for (let i = 0; i < 32; i++) {
+          const t = i / 31;
+          const x = (t - 0.5) * 1.2;
+          const y = Math.sin(t * Math.PI * 3) * 0.03;
+          const z = Math.sin(t * Math.PI) * 0.15;
+          crackPts.push(x, y - 1.2, z);
+        }
+        crackGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(crackPts), 3));
+        
+        const crackMat = new THREE.LineBasicMaterial({
+          color: 0xff6b5b,
+          linewidth: 2.5
+        });
+        const crack = new THREE.Line(crackGeo, crackMat);
+        group.add(crack);
+      }
 
       return group;
     };
@@ -269,28 +386,60 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.overflow = "hidden";
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(document.body.classList.contains("dark") ? 0x0f1a2b : 0xeff6ff);
+      scene.background = new THREE.Color(document.body.classList.contains("dark") ? 0x0a0e1a : 0xf5f7fa);
 
-      camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-      camera.position.set(0, 0, 10.5);
+      camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+      camera.position.set(0, 0, 14);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowShadowMap;
       viewer3dCanvas.appendChild(renderer.domElement);
 
-      const ambient = new THREE.HemisphereLight(0xe6f2ff, 0x203045, 1.05);
-      scene.add(ambient);
+      // Illuminazione clinica/professionale
+      const amb = new THREE.AmbientLight(0xf0f2f5, 0.55);
+      scene.add(amb);
 
-      const key = new THREE.DirectionalLight(0xffffff, 1.2);
-      key.position.set(4, 4, 6);
-      scene.add(key);
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.35);
+      keyLight.position.set(5.5, 6.2, 8.5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.far = 20;
+      keyLight.shadow.bias = -0.00015;
+      scene.add(keyLight);
 
-      const fill = new THREE.DirectionalLight(0xaad4ff, 0.55);
-      fill.position.set(-3, -2, 4);
-      scene.add(fill);
+      const fillLight = new THREE.DirectionalLight(0xcce5ff, 0.65);
+      fillLight.position.set(-4.2, -2.8, 5);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.DirectionalLight(0xffe5cc, 0.35);
+      rimLight.position.set(0, -1.5, -8);
+      scene.add(rimLight);
+
+      // Luci speculative su fratture
+      const fractureLights = [];
+      const fractureBoxes = window.fractureBoxes || [];
+      if (fractureBoxes.length > 0) {
+        fractureBoxes.slice(0, 3).forEach((box) => {
+          const fLight = new THREE.PointLight(0xff6b5b, 0.55, 6.5);
+          const cx = (box.x1 + box.x2) / 2;
+          const cy = 1 - (box.y1 + box.y2) / 2;
+          fLight.position.set(
+            (cx - 0.5) * 1.8,
+            (cy - 0.5) * 8.5 - 3 + 1.5,
+            2.0
+          );
+          scene.add(fLight);
+          fractureLights.push(fLight);
+        });
+      }
 
       boneModel = buildBoneModel();
+      boneModel.castShadow = true;
+      boneModel.receiveShadow = true;
       scene.add(boneModel);
 
       if (typeof OrbitControls !== "undefined") {
