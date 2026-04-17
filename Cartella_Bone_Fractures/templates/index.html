@@ -83,13 +83,9 @@
       </section>
 
       <section id="explorer" class="explorer-section">
-        <div class="explorer-eyebrow">NEW • Interactive 3D Service</div>
+        <div class="explorer-eyebrow">Interactive 3D Service</div>
         <h2>3D Anatomy Explorer</h2>
         <p class="explorer-intro">Explore anatomy in 3D with clear visual landmarks. This module is designed for educational orientation and helps users quickly understand common fracture-prone regions.</p>
-        <div class="explorer-actions">
-          <a href="{{ url_for('viewer_3d', region='humerus') }}" class="btn explorer-cta" style="text-decoration:none;">Open 3D Explorer</a>
-          <a href="#demo" class="btn secondary" style="text-decoration:none;">Try AI Demo First</a>
-        </div>
         <div class="explorer-grid">
           <div class="card explorer-card">
             <div class="label">Visual Clinical Legend</div>
@@ -102,7 +98,6 @@
           <div class="card explorer-card">
             <div class="label">Clinical Disclaimer</div>
             <p class="assistive-note strong-note">Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
-            <a href="{{ url_for('viewer_3d', region='humerus') }}" class="btn secondary" style="margin-top:10px; text-decoration:none;">Open Anatomy Explorer</a>
           </div>
         </div>
       </section>
