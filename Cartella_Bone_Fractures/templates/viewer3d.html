@@ -106,63 +106,131 @@
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Create roughness map
-    function createRoughnessMap() {
+    // Create procedural normal map for bone surface detail
+    function createNormalMap() {
       const cvs = document.createElement('canvas');
-      cvs.width = cvs.height = 256;
+      cvs.width = cvs.height = 512;
       const ctx = cvs.getContext('2d');
-      ctx.fillStyle = '#7a7a7a';
-      ctx.fillRect(0, 0, 256, 256);
-      for (let i = 0; i < 1500; i++) {
-        ctx.fillStyle = `rgba(${100 + Math.random() * 70},${100 + Math.random() * 70},${100 + Math.random() * 70},${0.05 + Math.random() * 0.15})`;
+      
+      // Base perlin-like noise
+      ctx.fillStyle = '#7f7f7f';
+      ctx.fillRect(0, 0, 512, 512);
+      
+      // Surface pores and texture
+      for (let i = 0; i < 3000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const size = 0.5 + Math.random() * 2.5;
+        const depth = 120 + Math.random() * 40;
+        ctx.fillStyle = `rgb(${depth},${depth},${128 + Math.random() * 40})`;
         ctx.beginPath();
-        ctx.arc(Math.random() * 256, Math.random() * 256, 0.8 + Math.random() * 2, 0, Math.PI * 2);
+        ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
+      
+      // Linear surface striations
+      ctx.strokeStyle = 'rgba(100,100,128,0.3)';
+      ctx.lineWidth = 0.7;
+      for (let i = 0; i < 80; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * 6.4);
+        ctx.lineTo(512, i * 6.4 + Math.sin(i) * 20);
+        ctx.stroke();
+      }
+      
       const tex = new THREE.CanvasTexture(cvs);
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(2, 2);
+      tex.repeat.set(3, 8);
       return tex;
     }
-    const roughMap = createRoughnessMap();
+    const normalMap = createNormalMap();
 
-    // Create bone
+    // Create realistic bone using advanced geometry
     function createBone() {
       const group = new THREE.Group();
+
+      // Diafisi (corpo dell'osso) con profilo anatomicamente accurato
       const profile = [
-        new THREE.Vector2(0, 0), new THREE.Vector2(0.38, 0.1), new THREE.Vector2(0.52, 0.8),
-        new THREE.Vector2(0.65, 2.2), new THREE.Vector2(0.72, 3.8), new THREE.Vector2(0.68, 4.6),
-        new THREE.Vector2(0.58, 4.9), new THREE.Vector2(0.45, 5), new THREE.Vector2(0, 5)
+        new THREE.Vector2(0.00, 0.0),
+        new THREE.Vector2(0.18, 0.05),
+        new THREE.Vector2(0.32, 0.15),
+        new THREE.Vector2(0.45, 0.35),
+        new THREE.Vector2(0.52, 0.60),
+        new THREE.Vector2(0.58, 1.10),
+        new THREE.Vector2(0.62, 1.60),
+        new THREE.Vector2(0.65, 2.10),
+        new THREE.Vector2(0.68, 2.80),
+        new THREE.Vector2(0.70, 3.40),
+        new THREE.Vector2(0.71, 4.00),
+        new THREE.Vector2(0.72, 4.60),
+        new THREE.Vector2(0.70, 5.00),
+        new THREE.Vector2(0.65, 5.25),
+        new THREE.Vector2(0.58, 5.40),
+        new THREE.Vector2(0.48, 5.50),
+        new THREE.Vector2(0.35, 5.55),
+        new THREE.Vector2(0.18, 5.58),
+        new THREE.Vector2(0.00, 5.60)
       ];
-      const shaftGeo = new THREE.LatheGeometry(profile, 96);
+      
+      const shaftGeo = new THREE.LatheGeometry(profile, 128, 0, Math.PI * 2);
+      shaftGeo.computeVertexNormals();
       const shaft = new THREE.Mesh(shaftGeo, new THREE.MeshStandardMaterial({
-        color: 0xe9e3d5, roughness: 0.88, metalness: 0.03, roughnessMap: roughMap
+        color: 0xf5e6d3,
+        roughness: 0.75,
+        metalness: 0.01,
+        roughnessMap: roughMap,
+        side: THREE.FrontSide
       }));
-      shaft.scale.set(1, 1.25, 1);
-      shaft.position.y = -1.2;
+      shaft.scale.set(1, 1.15, 1);
+      shaft.position.y = -0.9;
       shaft.castShadow = true;
       shaft.receiveShadow = true;
       group.add(shaft);
 
-      const topGeo = new THREE.SphereGeometry(0.8, 48, 32);
-      const top = new THREE.Mesh(topGeo, new THREE.MeshStandardMaterial({
-        color: 0xd4c9b8, roughness: 0.8, metalness: 0.02, roughnessMap: roughMap
+      // Epifisi prossimale (testa superiore) - più grande e complessa
+      const topHeadGeo = new THREE.IcosahedronGeometry(0.95, 6);
+      const topHead = new THREE.Mesh(topHeadGeo, new THREE.MeshStandardMaterial({
+        color: 0xebd9c3,
+        roughness: 0.72,
+        metalness: 0.02,
+        roughnessMap: roughMap
       }));
-      top.position.y = 4.1;
-      top.castShadow = true;
-      top.receiveShadow = true;
-      group.add(top);
+      topHead.scale.set(0.95, 1.05, 0.88);
+      topHead.position.y = 4.8;
+      topHead.castShadow = true;
+      topHead.receiveShadow = true;
+      group.add(topHead);
 
-      const bottomGeo = new THREE.SphereGeometry(0.68, 48, 32);
-      const bottom = new THREE.Mesh(bottomGeo, new THREE.MeshStandardMaterial({
-        color: 0xd4c9b8, roughness: 0.8, metalness: 0.02, roughnessMap: roughMap
+      // Epifisi distale (testa inferiore) - più piccola
+      const bottomHeadGeo = new THREE.IcosahedronGeometry(0.72, 6);
+      const bottomHead = new THREE.Mesh(bottomHeadGeo, new THREE.MeshStandardMaterial({
+        color: 0xebd9c3,
+        roughness: 0.72,
+        metalness: 0.02,
+        roughnessMap: roughMap
       }));
-      bottom.position.y = -5.2;
-      bottom.castShadow = true;
-      bottom.receiveShadow = true;
-      group.add(bottom);
+      bottomHead.scale.set(0.82, 0.95, 0.78);
+      bottomHead.position.y = -5.8;
+      bottomHead.castShadow = true;
+      bottomHead.receiveShadow = true;
+      group.add(bottomHead);
 
-      group.position.y = 0.35;
+      // Tuberosità prossimale (piccolo bump anatomico)
+      const tibGeo = new THREE.BoxGeometry(0.35, 0.55, 0.42);
+      const tib = new THREE.Mesh(tibGeo, new THREE.MeshStandardMaterial({
+        color: 0xf5e6d3,
+        roughness: 0.76,
+        metalness: 0.01,
+        roughnessMap: roughMap
+      }));
+      tib.position.set(0, 4.1, 0.48);
+      tib.rotation.z = 0.15;
+      tib.castShadow = true;
+      tib.receiveShadow = true;
+      group.add(tib);
+
+      group.position.y = 0.5;
+      group.castShadow = true;
       return group;
     }
 
