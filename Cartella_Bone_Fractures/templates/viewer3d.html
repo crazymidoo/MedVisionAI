@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MedVisionAI | 3D Bone Viewer</title>
+  <title>MedVisionAI | 3D Anatomy Explorer</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; }
@@ -53,22 +53,18 @@
       <a class="back" href="/">← Dashboard</a>
       <div>
         <h1>3D Anatomy Explorer</h1>
-        <p class="subtitle">Atlante anatomico interattivo con sedi tipiche di frattura.</p>
+        <p class="subtitle">Interactive anatomy atlas with common fracture-prone sites.</p>
       </div>
       <div class="card">
-        <h3>Controlli</h3>
-        <p>Trascina per ruotare • Scroll per zoom</p>
+        <h3>Controls</h3>
+        <p>Drag to rotate • Scroll to zoom</p>
       </div>
       <div class="card">
-        <h3>Distretto</h3>
+        <h3>District</h3>
         <p>{{ model_config.region_label }}</p>
       </div>
       <div class="card">
-        <h3>Supporto AI</h3>
-        <p>{% if ai_quadrant_label %}Area RX suggerita: {{ ai_quadrant_label }}{% else %}Nessun quadrante AI disponibile.{% endif %}</p>
-      </div>
-      <div class="card">
-        <h3>Legenda Clinica Visuale</h3>
+        <h3>Visual Clinical Legend</h3>
         <div class="site-list">
           {% for site in model_config.frequent_sites %}
           <button type="button" class="site-btn" data-site-id="{{ site.id }}">{{ site.label }}</button>
@@ -76,18 +72,18 @@
         </div>
       </div>
       <div class="card">
-        <h3>Sede Evidenziata</h3>
-        <p id="site-description">Clicca un elemento della legenda per leggere i dettagli.</p>
+        <h3>Highlighted Site</h3>
+        <p id="site-description">Click a legend item to see details.</p>
       </div>
       <div class="card disclaimer">
         <h3>Disclaimer</h3>
-        <p>Modello illustrativo: non e una ricostruzione paziente-specifica e non sostituisce il referto medico.</p>
+        <p>Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
       </div>
       <div class="card">
-        <h3>Sorgente Modello</h3>
+        <h3>Model Source</h3>
         <p>{{ model_config.source }}</p>
       </div>
-      <div id="status" class="status">Caricamento...</div>
+      <div id="status" class="status">Loading...</div>
     </aside>
   </main>
 
@@ -243,11 +239,11 @@
         btn.classList.toggle('active', btn.dataset.siteId === siteId);
       });
 
-      statusEl.textContent = 'Sede didattica attiva: ' + selected.label;
+      statusEl.textContent = 'Active educational site: ' + selected.label;
       statusEl.classList.add('ready');
     }
 
-    statusEl.textContent = 'Caricamento distretto anatomico ' + MODEL_CONFIG.region_label + '...';
+    statusEl.textContent = 'Loading anatomical district ' + MODEL_CONFIG.region_label + '...';
 
     const canLoadGltf = typeof THREE.GLTFLoader === 'function';
     dbg('GLTFLoader: ' + (canLoadGltf ? 'OK' : 'MISSING'));
@@ -309,12 +305,12 @@
           }
         },
         () => {
-          statusEl.textContent = 'Errore GLB: fallback attivo';
+          statusEl.textContent = 'GLB error: fallback active';
           dbg('GLB load failed, fallback active');
         }
       );
     } else {
-      statusEl.textContent = 'GLTFLoader non disponibile, fallback attivo';
+      statusEl.textContent = 'GLTFLoader unavailable, fallback active';
     }
 
     document.querySelectorAll('.site-btn').forEach((btn) => {
