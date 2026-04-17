@@ -18,10 +18,25 @@
     .card { border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 10px; padding: 10px; background: rgba(13, 24, 44, 0.5); font-size: 12px; }
     .card h3 { font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
     .card p { color: #94a3b8; line-height: 1.5; }
+    .site-list { display: flex; flex-direction: column; gap: 8px; }
+    .site-btn {
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(12, 26, 45, 0.62);
+      color: #cbd5e1;
+      border-radius: 8px;
+      text-align: left;
+      padding: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+    .site-btn:hover { border-color: rgba(56, 189, 248, 0.5); }
+    .site-btn.active { border-color: rgba(134, 225, 160, 0.6); background: rgba(30, 58, 54, 0.72); color: #d1fae5; }
     .status { padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); font-size: 12px; color: #cbd5e1; min-height: 48px; display: flex; align-items: center; }
     .status.ready { color: #86e1a0; border-color: rgba(134, 225, 160, 0.35); }
     .back { color: #38bdf8; text-decoration: none; font-size: 12px; font-weight: 600; }
     .back:hover { text-decoration: underline; }
+    .disclaimer { border-left: 3px solid #38bdf8; padding-left: 10px; }
     #debug { position: absolute; bottom: 20px; left: 20px; background: rgba(0, 90, 0, 0.9); color: #88ff88; font-family: monospace; font-size: 10px; line-height: 1.4; padding: 10px; border-radius: 8px; border: 1px solid #2aff2a; max-width: 320px; max-height: 200px; overflow-y: auto; z-index: 20; }
     @media (max-width: 1024px) { .layout { grid-template-columns: 1fr; grid-template-rows: 1fr 280px; } }
   </style>
@@ -37,20 +52,40 @@
     <aside class="panel">
       <a class="back" href="/">← Dashboard</a>
       <div>
-        <h1>Human Bone 3D</h1>
-        <p class="subtitle">Viewer interattivo con modello GLB realistico.</p>
+        <h1>3D Anatomy Explorer</h1>
+        <p class="subtitle">Atlante anatomico interattivo con sedi tipiche di frattura.</p>
       </div>
       <div class="card">
         <h3>Controlli</h3>
         <p>Trascina per ruotare • Scroll per zoom</p>
       </div>
       <div class="card">
-        <h3>Frattura</h3>
-        <p>Indicatore rosso con animazione pulsante</p>
+        <h3>Distretto</h3>
+        <p>{{ model_config.region_label }}</p>
       </div>
       <div class="card">
-        <h3>Sorgente Clinica</h3>
-        <p>BodyParts3D (DBCLS), Right Humerus FMA23130, CC BY-SA 2.1 JP</p>
+        <h3>Supporto AI</h3>
+        <p>{% if ai_quadrant_label %}Area RX suggerita: {{ ai_quadrant_label }}{% else %}Nessun quadrante AI disponibile.{% endif %}</p>
+      </div>
+      <div class="card">
+        <h3>Legenda Clinica Visuale</h3>
+        <div class="site-list">
+          {% for site in model_config.frequent_sites %}
+          <button type="button" class="site-btn" data-site-id="{{ site.id }}">{{ site.label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card">
+        <h3>Sede Evidenziata</h3>
+        <p id="site-description">Clicca un elemento della legenda per leggere i dettagli.</p>
+      </div>
+      <div class="card disclaimer">
+        <h3>Disclaimer</h3>
+        <p>Modello illustrativo: non e una ricostruzione paziente-specifica e non sostituisce il referto medico.</p>
+      </div>
+      <div class="card">
+        <h3>Sorgente Modello</h3>
+        <p>{{ model_config.source }}</p>
       </div>
       <div id="status" class="status">Caricamento...</div>
     </aside>
@@ -61,9 +96,12 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <script>
+    const MODEL_CONFIG = {{ model_config | tojson | safe }};
+    const INITIAL_FOCUS_ID = {{ initial_focus_id | tojson | safe }};
     const canvas = document.getElementById('canvas');
     const debugEl = document.getElementById('debug');
     const statusEl = document.getElementById('status');
+    const siteDescriptionEl = document.getElementById('site-description');
     const logs = [];
 
     function dbg(msg) {
@@ -167,21 +205,49 @@
       dbg('OrbitControls missing');
     }
 
-    const fractureCore = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 20, 20),
-      new THREE.MeshStandardMaterial({ color: 0xff5661, emissive: 0xff0015, emissiveIntensity: 1.2, roughness: 0.35 })
-    );
-    const fractureHalo = new THREE.Mesh(
-      new THREE.SphereGeometry(0.14, 20, 20),
-      new THREE.MeshStandardMaterial({ color: 0xff7a85, emissive: 0xff2f3f, emissiveIntensity: 0.75, transparent: true, opacity: 0.25 })
-    );
-    const fractureLight = new THREE.PointLight(0xff3b4c, 0.8, 2.3);
-    const fractureGroup = new THREE.Group();
-    fractureGroup.add(fractureCore, fractureHalo, fractureLight);
-    fractureGroup.position.set(0.22, 1.1, 0.25);
-    scene.add(fractureGroup);
+    const siteMarkerGroups = new Map();
+    let activeSiteId = null;
 
-    statusEl.textContent = 'Caricamento modello anatomico BodyParts3D...';
+    function createSiteMarker(site) {
+      const core = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 18, 18),
+        new THREE.MeshStandardMaterial({ color: 0xff6b6b, emissive: 0xff2f2f, emissiveIntensity: 0.7, roughness: 0.3 })
+      );
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 18, 18),
+        new THREE.MeshStandardMaterial({ color: 0xff8f8f, emissive: 0xff5454, emissiveIntensity: 0.4, transparent: true, opacity: 0.22 })
+      );
+      const light = new THREE.PointLight(0xff4d5a, 0.55, 2.2);
+      const group = new THREE.Group();
+      group.add(core, halo, light);
+      group.position.set(site.position.x, site.position.y, site.position.z);
+      scene.add(group);
+      siteMarkerGroups.set(site.id, { group, core, halo, site });
+    }
+
+    function activateSite(siteId) {
+      if (!siteMarkerGroups.has(siteId)) return;
+      activeSiteId = siteId;
+
+      siteMarkerGroups.forEach((entry, id) => {
+        const isActive = id === siteId;
+        entry.core.material.emissiveIntensity = isActive ? 1.4 : 0.4;
+        entry.halo.material.opacity = isActive ? 0.30 : 0.10;
+        entry.group.scale.setScalar(isActive ? 1.25 : 0.92);
+      });
+
+      const selected = siteMarkerGroups.get(siteId).site;
+      siteDescriptionEl.textContent = selected.description;
+
+      document.querySelectorAll('.site-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.siteId === siteId);
+      });
+
+      statusEl.textContent = 'Sede didattica attiva: ' + selected.label;
+      statusEl.classList.add('ready');
+    }
+
+    statusEl.textContent = 'Caricamento distretto anatomico ' + MODEL_CONFIG.region_label + '...';
 
     const canLoadGltf = typeof THREE.GLTFLoader === 'function';
     dbg('GLTFLoader: ' + (canLoadGltf ? 'OK' : 'MISSING'));
@@ -189,7 +255,7 @@
     if (canLoadGltf) {
       const loader = new THREE.GLTFLoader();
       loader.load(
-        '/static/models/bodyparts3d_right_humerus.glb',
+        MODEL_CONFIG.url,
         (gltf) => {
           scene.remove(bone);
           bone = gltf.scene;
@@ -229,9 +295,12 @@
           }
 
           scene.add(bone);
-          statusEl.textContent = 'Modello GLB caricato';
-          statusEl.classList.add('ready');
-          dbg('GLB loaded ✓ size=' + maxDim.toFixed(2) + ' scale=' + scale.toFixed(4));
+          MODEL_CONFIG.frequent_sites.forEach((site) => createSiteMarker(site));
+          if (MODEL_CONFIG.frequent_sites.length > 0) {
+            const startSite = INITIAL_FOCUS_ID || MODEL_CONFIG.frequent_sites[0].id;
+            activateSite(startSite);
+          }
+          dbg('GLB loaded (' + MODEL_CONFIG.region + ') ✓ size=' + maxDim.toFixed(2) + ' scale=' + scale.toFixed(4));
         },
         (p) => {
           if (p.total > 0) {
@@ -248,14 +317,21 @@
       statusEl.textContent = 'GLTFLoader non disponibile, fallback attivo';
     }
 
+    document.querySelectorAll('.site-btn').forEach((btn) => {
+      btn.addEventListener('click', () => activateSite(btn.dataset.siteId));
+    });
+
     const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
 
-      const pulse = 1 + Math.sin(t * 4.2) * 0.12;
-      fractureCore.scale.setScalar(pulse);
-      fractureHalo.scale.setScalar(1 + Math.sin(t * 4.2 + 0.7) * 0.18);
+      siteMarkerGroups.forEach((entry, id) => {
+        const base = id === activeSiteId ? 1.0 : 0.88;
+        const pulse = base + Math.sin(t * 3.8 + entry.group.position.y) * 0.06;
+        entry.core.scale.setScalar(pulse);
+        entry.halo.scale.setScalar(1 + Math.sin(t * 3.8 + 0.6 + entry.group.position.x) * 0.16);
+      });
 
       if (controls) controls.update();
       renderer.render(scene, camera);

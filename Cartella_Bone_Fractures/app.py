@@ -17,6 +17,180 @@ os.makedirs(RESULT_FOLDER, exist_ok=True)
 
 model = YOLO(MODEL_PATH)
 CLASS_NAMES = ["FRACTURE"]
+REGION_LABELS = {
+    "humerus": "Omero",
+    "wrist": "Polso",
+    "hand": "Mano",
+}
+
+MODEL_LIBRARY = {
+    "humerus": {
+        "url": "/static/models/bodyparts3d_right_humerus.glb",
+        "source": "BodyParts3D (DBCLS), Right Humerus FMA23130, CC BY-SA 2.1 JP",
+    },
+    "wrist": {
+        "url": "/static/models/bone.glb",
+        "source": "GLB anatomico locale (uso didattico)",
+    },
+    "hand": {
+        "url": "/static/models/test.glb",
+        "source": "GLB anatomico locale (uso didattico)",
+    },
+}
+
+FREQUENT_SITES = {
+    "humerus": [
+        {
+            "id": "surgical-neck",
+            "label": "Collo chirurgico",
+            "description": "Sede tipica di fratture da caduta nell'adulto.",
+            "position": {"x": 0.20, "y": 1.65, "z": 0.12},
+        },
+        {
+            "id": "mid-shaft",
+            "label": "Diafisi omerale",
+            "description": "Fratture da trauma diretto o torsione.",
+            "position": {"x": 0.26, "y": 0.55, "z": 0.22},
+        },
+        {
+            "id": "distal-humerus",
+            "label": "Omero distale",
+            "description": "Coinvolge la regione sovracondiloidea e articolare.",
+            "position": {"x": 0.18, "y": -1.05, "z": 0.20},
+        },
+    ],
+    "wrist": [
+        {
+            "id": "distal-radius",
+            "label": "Radio distale",
+            "description": "Tra le fratture piu comuni dopo trauma in estensione.",
+            "position": {"x": 0.18, "y": 0.20, "z": 0.10},
+        },
+        {
+            "id": "scaphoid",
+            "label": "Scafoide",
+            "description": "Sede tipica con dolore alla tabacchiera anatomica.",
+            "position": {"x": -0.24, "y": 0.45, "z": 0.12},
+        },
+        {
+            "id": "ulnar-styloid",
+            "label": "Stiloide ulnare",
+            "description": "Può associarsi a traumi del complesso ulnocarpale.",
+            "position": {"x": 0.30, "y": -0.25, "z": 0.14},
+        },
+    ],
+    "hand": [
+        {
+            "id": "fifth-metacarpal",
+            "label": "Base 5 metacarpo",
+            "description": "Area frequente nei traumi da impatto diretto.",
+            "position": {"x": 0.26, "y": 0.12, "z": 0.08},
+        },
+        {
+            "id": "proximal-phalanx",
+            "label": "Falange prossimale",
+            "description": "Può essere coinvolta nei traumi sportivi.",
+            "position": {"x": -0.18, "y": 0.68, "z": 0.08},
+        },
+        {
+            "id": "carpometacarpal",
+            "label": "Articolazione carpometacarpale",
+            "description": "Regione utile per orientare la valutazione didattica.",
+            "position": {"x": -0.06, "y": -0.32, "z": 0.10},
+        },
+    ],
+}
+
+QUADRANT_FOCUS_MAP = {
+    "humerus": {
+        "upper_left": "surgical-neck",
+        "upper_right": "surgical-neck",
+        "lower_left": "distal-humerus",
+        "lower_right": "mid-shaft",
+    },
+    "wrist": {
+        "upper_left": "scaphoid",
+        "upper_right": "distal-radius",
+        "lower_left": "ulnar-styloid",
+        "lower_right": "distal-radius",
+    },
+    "hand": {
+        "upper_left": "proximal-phalanx",
+        "upper_right": "fifth-metacarpal",
+        "lower_left": "carpometacarpal",
+        "lower_right": "fifth-metacarpal",
+    },
+}
+
+
+def infer_region_from_filename(filename):
+    name = (filename or "").lower()
+    if any(token in name for token in ["wri", "wrist", "polso", "carp"]):
+        return "wrist"
+    if any(token in name for token in ["hand", "mano", "metacarp", "phal", "finger"]):
+        return "hand"
+    if any(token in name for token in ["humer", "omero"]):
+        return "humerus"
+    return "humerus"
+
+
+def resolve_model_config(region):
+    region_key = region if region in MODEL_LIBRARY else "humerus"
+    model_cfg = MODEL_LIBRARY[region_key].copy()
+    model_abs = os.path.join(BASE_DIR, model_cfg["url"].lstrip("/"))
+    if not os.path.exists(model_abs):
+        region_key = "humerus"
+        model_cfg = MODEL_LIBRARY[region_key].copy()
+
+    model_cfg["region"] = region_key
+    model_cfg["region_label"] = REGION_LABELS.get(region_key, "Omero")
+    model_cfg["frequent_sites"] = FREQUENT_SITES.get(region_key, [])
+    return model_cfg
+
+
+def quadrant_from_box(box):
+    cx = (box["x1"] + box["x2"]) / 2
+    cy = (box["y1"] + box["y2"]) / 2
+    horizontal = "left" if cx <= 0.5 else "right"
+    vertical = "upper" if cy <= 0.5 else "lower"
+    return f"{vertical}_{horizontal}"
+
+
+def human_quadrant_label(quadrant):
+    mapping = {
+        "upper_left": "quadrante superiore sinistro",
+        "upper_right": "quadrante superiore destro",
+        "lower_left": "quadrante inferiore sinistro",
+        "lower_right": "quadrante inferiore destro",
+    }
+    return mapping.get(quadrant, "quadrante non definito")
+
+
+def site_label_for(region, site_id):
+    sites = FREQUENT_SITES.get(region, [])
+    for site in sites:
+        if site["id"] == site_id:
+            return site["label"]
+    return "sede didattica"
+
+
+def build_ai_support(fracture_boxes, region):
+    if not fracture_boxes:
+        return (
+            "Nessuna area sopra soglia rilevata. Usa il 3D come atlante anatomico didattico.",
+            "",
+            "",
+        )
+
+    best_box = max(fracture_boxes, key=lambda b: b.get("score", 0.0))
+    quadrant = quadrant_from_box(best_box)
+    focus_id = QUADRANT_FOCUS_MAP.get(region, {}).get(quadrant, "")
+    focus_label = site_label_for(region, focus_id)
+    text = (
+        f"Frattura sospetta nel {human_quadrant_label(quadrant)} dell'RX. "
+        f"Nel 3D viene aperta la sede didattica corrispondente: {focus_label}."
+    )
+    return text, quadrant, focus_id
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -28,16 +202,27 @@ def index():
     accuracy = None
     confidences = []
     fracture_boxes = []
+    selected_region = "humerus"
+    anatomy_input = "auto"
+    ai_support_text = "Carica un RX per ottenere un suggerimento didattico collegato al 3D Explorer."
+    ai_quadrant = ""
+    ai_focus_id = ""
 
     if request.method == "POST":
         file = request.files.get("file")
         if not file or file.filename == "" or not allowed_file(file.filename):
             return "File non valido"
 
+        anatomy_input = (request.form.get("anatomy_region", "auto") or "auto").strip().lower()
+        if anatomy_input not in {"auto", *REGION_LABELS.keys()}:
+            anatomy_input = "auto"
+
         filename = secure_filename(file.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
         original_image = filename
+
+        selected_region = infer_region_from_filename(filename) if anatomy_input == "auto" else anatomy_input
 
         results = model.predict(filepath, imgsz=256, device="cpu", verbose=False)[0]
 
@@ -74,6 +259,7 @@ def index():
         result_path = os.path.join(RESULT_FOLDER, filename)
         cv2.imwrite(result_path, img_pred)
         result_image = filename
+        ai_support_text, ai_quadrant, ai_focus_id = build_ai_support(fracture_boxes, selected_region)
 
     confidences = confidences or []
     fracture_boxes = fracture_boxes or []
@@ -82,7 +268,13 @@ def index():
                            result_image=result_image,
                            accuracy=accuracy,
                            confidences=confidences,
-                           fracture_boxes=fracture_boxes)
+                           fracture_boxes=fracture_boxes,
+                           selected_region=selected_region,
+                           anatomy_input=anatomy_input,
+                           region_labels=REGION_LABELS,
+                           ai_support_text=ai_support_text,
+                           ai_quadrant=ai_quadrant,
+                           ai_focus_id=ai_focus_id)
 
 @app.route("/uploads/<filename>")
 def send_upload(filename):
@@ -102,7 +294,21 @@ def signup():
 
 @app.route("/viewer-3d")
 def viewer_3d():
-    return render_template("viewer3d.html")
+    region = (request.args.get("region") or "humerus").strip().lower()
+    focus_id = (request.args.get("focus") or "").strip().lower()
+    quadrant = (request.args.get("quadrant") or "").strip().lower()
+
+    model_config = resolve_model_config(region)
+    valid_focus_ids = {site["id"] for site in model_config["frequent_sites"]}
+    if focus_id not in valid_focus_ids:
+        focus_id = model_config["frequent_sites"][0]["id"] if model_config["frequent_sites"] else ""
+
+    return render_template(
+        "viewer3d.html",
+        model_config=model_config,
+        initial_focus_id=focus_id,
+        ai_quadrant_label=human_quadrant_label(quadrant) if quadrant else "",
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
