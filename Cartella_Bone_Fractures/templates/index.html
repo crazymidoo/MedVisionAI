@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -84,20 +84,20 @@
 
       <section id="explorer" class="explorer-section">
         <h2>3D Anatomy Explorer</h2>
-        <p>Il 3D ha un ruolo didattico: mostra i distretti anatomici (mano, polso, omero) e le sedi frequenti di frattura per aiutare l'orientamento clinico.</p>
+        <p>The 3D module has an educational role: it shows anatomical districts (hand, wrist, humerus) and frequent fracture sites to support clinical orientation.</p>
         <div class="explorer-grid">
           <div class="card explorer-card">
-            <div class="label">Legenda Clinica Visuale</div>
+            <div class="label">Visual Clinical Legend</div>
             <ul class="explorer-list">
-              <li>Omero: collo chirurgico, diafisi, omero distale</li>
-              <li>Polso: radio distale, scafoide, stiloide ulnare</li>
-              <li>Mano: metacarpi, falangi, regione carpometacarpale</li>
+              <li>Humerus: surgical neck, shaft, distal humerus</li>
+              <li>Wrist: distal radius, scaphoid, ulnar styloid</li>
+              <li>Hand: metacarpals, phalanges, carpometacarpal region</li>
             </ul>
           </div>
           <div class="card explorer-card">
-            <div class="label">Disclaimer Clinico</div>
-            <p class="assistive-note strong-note">Modello illustrativo: non e una ricostruzione paziente-specifica e non sostituisce il referto medico.</p>
-            <a href="{{ url_for('viewer_3d', region='humerus') }}" class="btn secondary" style="margin-top:10px; text-decoration:none;">Apri Anatomy Explorer</a>
+            <div class="label">Clinical Disclaimer</div>
+            <p class="assistive-note strong-note">Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
+            <a href="{{ url_for('viewer_3d', region='humerus') }}" class="btn secondary" style="margin-top:10px; text-decoration:none;">Open Anatomy Explorer</a>
           </div>
         </div>
       </section>
@@ -119,15 +119,6 @@
                   <small>or click to select a file (JPG, PNG)</small>
                 </div>
                 <input type="file" id="file-input" name="file" accept="image/*" hidden required>
-              </div>
-              <div class="controls" style="margin-top:10px;">
-                <label for="anatomy-region" class="kv" style="min-width: 160px;">Distretto RX (didattico)</label>
-                <select id="anatomy-region" name="anatomy_region" class="btn secondary" style="flex:1; text-align:left;">
-                  <option value="auto" {% if anatomy_input == 'auto' %}selected{% endif %}>Auto da nome file</option>
-                  <option value="humerus" {% if anatomy_input == 'humerus' %}selected{% endif %}>Omero</option>
-                  <option value="wrist" {% if anatomy_input == 'wrist' %}selected{% endif %}>Polso</option>
-                  <option value="hand" {% if anatomy_input == 'hand' %}selected{% endif %}>Mano</option>
-                </select>
               </div>
               <div class="controls">
                 <button type="submit" class="btn">Upload & Analyze</button>
@@ -169,16 +160,9 @@
                 <div class="label">Confidence Scores</div>
                 <canvas id="confidenceChart" width="400" height="200"></canvas>
               </div>
-              <div class="card">
-                <div class="label">AI Supporto Didattico</div>
-                <p class="assistive-note">{{ ai_support_text }}</p>
-              </div>
               <div class="actions">
                 <button id="download-pdf" class="btn" style="width:100%;">Download PDF</button>
-                <a href="{{ url_for('viewer_3d', region=selected_region, focus=ai_focus_id, quadrant=ai_quadrant) }}" class="btn secondary" style="width:100%; text-decoration:none;">Apri Anatomy Explorer</a>
               </div>
-              <p class="assistive-note">Distretto selezionato: {{ region_labels[selected_region] }}.</p>
-              <p class="assistive-note">Modello illustrativo: non ricostruzione paziente-specifica.</p>
             </div>
           </div>
           {% else %}
@@ -188,11 +172,6 @@
                 <div class="empty-title">Result Panel Ready</div>
                 <div class="empty-text">Your analyzed image and confidence chart will appear here right after upload.</div>
               </div>
-            </div>
-            <div class="card">
-              <div class="label">Anatomy Explorer</div>
-              <p class="assistive-note">Accedi al 3D didattico dalla homepage anche prima dell'upload.</p>
-              <a href="{{ url_for('viewer_3d', region='humerus') }}" class="btn secondary" style="width:100%; text-decoration:none; margin-top:8px;">Apri Explorer</a>
             </div>
           </div>
           {% endif %}

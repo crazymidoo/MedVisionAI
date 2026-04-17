@@ -18,9 +18,9 @@ os.makedirs(RESULT_FOLDER, exist_ok=True)
 model = YOLO(MODEL_PATH)
 CLASS_NAMES = ["FRACTURE"]
 REGION_LABELS = {
-    "humerus": "Omero",
-    "wrist": "Polso",
-    "hand": "Mano",
+    "humerus": "Humerus",
+    "wrist": "Wrist",
+    "hand": "Hand",
 }
 
 MODEL_LIBRARY = {
@@ -30,11 +30,11 @@ MODEL_LIBRARY = {
     },
     "wrist": {
         "url": "/static/models/bone.glb",
-        "source": "GLB anatomico locale (uso didattico)",
+        "source": "Local anatomical GLB (educational use)",
     },
     "hand": {
         "url": "/static/models/test.glb",
-        "source": "GLB anatomico locale (uso didattico)",
+        "source": "Local anatomical GLB (educational use)",
     },
 }
 
@@ -42,60 +42,60 @@ FREQUENT_SITES = {
     "humerus": [
         {
             "id": "surgical-neck",
-            "label": "Collo chirurgico",
-            "description": "Sede tipica di fratture da caduta nell'adulto.",
+            "label": "Surgical neck",
+            "description": "Common fracture site after falls in adults.",
             "position": {"x": 0.20, "y": 1.65, "z": 0.12},
         },
         {
             "id": "mid-shaft",
-            "label": "Diafisi omerale",
-            "description": "Fratture da trauma diretto o torsione.",
+            "label": "Humeral shaft",
+            "description": "May fracture after direct trauma or torsion.",
             "position": {"x": 0.26, "y": 0.55, "z": 0.22},
         },
         {
             "id": "distal-humerus",
-            "label": "Omero distale",
-            "description": "Coinvolge la regione sovracondiloidea e articolare.",
+            "label": "Distal humerus",
+            "description": "Can involve supracondylar and articular areas.",
             "position": {"x": 0.18, "y": -1.05, "z": 0.20},
         },
     ],
     "wrist": [
         {
             "id": "distal-radius",
-            "label": "Radio distale",
-            "description": "Tra le fratture piu comuni dopo trauma in estensione.",
+            "label": "Distal radius",
+            "description": "One of the most common fracture sites after extension trauma.",
             "position": {"x": 0.18, "y": 0.20, "z": 0.10},
         },
         {
             "id": "scaphoid",
-            "label": "Scafoide",
-            "description": "Sede tipica con dolore alla tabacchiera anatomica.",
+            "label": "Scaphoid",
+            "description": "Typical location with tenderness in the anatomic snuffbox.",
             "position": {"x": -0.24, "y": 0.45, "z": 0.12},
         },
         {
             "id": "ulnar-styloid",
-            "label": "Stiloide ulnare",
-            "description": "Può associarsi a traumi del complesso ulnocarpale.",
+            "label": "Ulnar styloid",
+            "description": "May be associated with ulnocarpal complex trauma.",
             "position": {"x": 0.30, "y": -0.25, "z": 0.14},
         },
     ],
     "hand": [
         {
             "id": "fifth-metacarpal",
-            "label": "Base 5 metacarpo",
-            "description": "Area frequente nei traumi da impatto diretto.",
+            "label": "Fifth metacarpal base",
+            "description": "Frequent area in direct-impact trauma.",
             "position": {"x": 0.26, "y": 0.12, "z": 0.08},
         },
         {
             "id": "proximal-phalanx",
-            "label": "Falange prossimale",
-            "description": "Può essere coinvolta nei traumi sportivi.",
+            "label": "Proximal phalanx",
+            "description": "Can be involved in sports-related trauma.",
             "position": {"x": -0.18, "y": 0.68, "z": 0.08},
         },
         {
             "id": "carpometacarpal",
-            "label": "Articolazione carpometacarpale",
-            "description": "Regione utile per orientare la valutazione didattica.",
+            "label": "Carpometacarpal joint",
+            "description": "Useful region for educational anatomic orientation.",
             "position": {"x": -0.06, "y": -0.32, "z": 0.10},
         },
     ],
@@ -158,12 +158,12 @@ def quadrant_from_box(box):
 
 def human_quadrant_label(quadrant):
     mapping = {
-        "upper_left": "quadrante superiore sinistro",
-        "upper_right": "quadrante superiore destro",
-        "lower_left": "quadrante inferiore sinistro",
-        "lower_right": "quadrante inferiore destro",
+        "upper_left": "upper-left quadrant",
+        "upper_right": "upper-right quadrant",
+        "lower_left": "lower-left quadrant",
+        "lower_right": "lower-right quadrant",
     }
-    return mapping.get(quadrant, "quadrante non definito")
+    return mapping.get(quadrant, "undefined quadrant")
 
 
 def site_label_for(region, site_id):
@@ -171,13 +171,13 @@ def site_label_for(region, site_id):
     for site in sites:
         if site["id"] == site_id:
             return site["label"]
-    return "sede didattica"
+    return "educational site"
 
 
 def build_ai_support(fracture_boxes, region):
     if not fracture_boxes:
         return (
-            "Nessuna area sopra soglia rilevata. Usa il 3D come atlante anatomico didattico.",
+            "No area above threshold detected. Use the 3D viewer as an educational anatomy atlas.",
             "",
             "",
         )
@@ -187,8 +187,8 @@ def build_ai_support(fracture_boxes, region):
     focus_id = QUADRANT_FOCUS_MAP.get(region, {}).get(quadrant, "")
     focus_label = site_label_for(region, focus_id)
     text = (
-        f"Frattura sospetta nel {human_quadrant_label(quadrant)} dell'RX. "
-        f"Nel 3D viene aperta la sede didattica corrispondente: {focus_label}."
+        f"Suspected fracture in the {human_quadrant_label(quadrant)} of the X-ray. "
+        f"The 3D viewer opens the corresponding educational focus: {focus_label}."
     )
     return text, quadrant, focus_id
 
@@ -204,14 +204,14 @@ def index():
     fracture_boxes = []
     selected_region = "humerus"
     anatomy_input = "auto"
-    ai_support_text = "Carica un RX per ottenere un suggerimento didattico collegato al 3D Explorer."
+    ai_support_text = "Upload an X-ray to get an educational hint linked to the 3D Explorer."
     ai_quadrant = ""
     ai_focus_id = ""
 
     if request.method == "POST":
         file = request.files.get("file")
         if not file or file.filename == "" or not allowed_file(file.filename):
-            return "File non valido"
+            return "Invalid file"
 
         anatomy_input = (request.form.get("anatomy_region", "auto") or "auto").strip().lower()
         if anatomy_input not in {"auto", *REGION_LABELS.keys()}:
