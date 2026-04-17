@@ -100,5 +100,9 @@ def signin():
 def signup():
     return "Sign Up page"
 
+@app.route("/viewer-3d")
+def viewer_3d():
+    return render_template("viewer3d.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
