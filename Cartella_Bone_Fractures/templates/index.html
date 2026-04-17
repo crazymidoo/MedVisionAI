@@ -36,9 +36,9 @@
         <ul>
           <li><a href="#intro" class="active">Home</a></li>
           <li><a href="#how">How It Works</a></li>
+          <li><a href="#analysis">X-ray Analysis</a></li>
           <li><a href="#explorer">3D Explorer</a></li>
           <li><a href="#who">Who Can Use</a></li>
-          <li><a href="#demo">Demo</a></li>
           <li><a href="#why">Why Choose Us</a></li>
           <li><a href="#about">About</a></li>
         </ul>
@@ -82,37 +82,9 @@
         <p>Simply upload an X-ray image in JPG or PNG format. The AI automatically detects possible fractures and generates easy-to-read reports for further review.</p>
       </section>
 
-      <section id="explorer" class="explorer-section">
-        <div class="explorer-eyebrow">Interactive 3D Service</div>
-        <h2>3D Anatomy Explorer</h2>
-        <p class="explorer-intro">Explore anatomy in 3D with clear visual landmarks. This module is designed for educational orientation and helps users quickly understand common fracture-prone regions.</p>
-        <div class="explorer-actions">
-          <a href="/viewer-3d?region=humerus" class="btn explorer-cta">Open 3D Viewer</a>
-        </div>
-        <div class="explorer-grid">
-          <div class="card explorer-card">
-            <div class="label">Visual Clinical Legend</div>
-            <ul class="explorer-list">
-              <li>Humerus: surgical neck, shaft, distal humerus</li>
-              <li>Wrist: distal radius, scaphoid, ulnar styloid</li>
-              <li>Hand: metacarpals, phalanges, carpometacarpal region</li>
-            </ul>
-          </div>
-          <div class="card explorer-card">
-            <div class="label">Clinical Disclaimer</div>
-            <p class="assistive-note strong-note">Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="who">
-        <h2>Who Can Use It?</h2>
-        <p>The platform is perfect for professionals, students, researchers, or anyone interested in medical imaging. No prior experience is required to explore and understand X-ray results efficiently.</p>
-      </section>
-
-      <section id="demo" class="demo-section">
+      <section id="analysis" class="demo-section">
         <div class="explorer-eyebrow">Analyze X-rays</div>
-        <h2>Demo</h2>
+        <h2>X-ray Analysis</h2>
         <div class="grid">
           <div class="card">
             <form method="POST" enctype="multipart/form-data" id="upload-form">
@@ -181,6 +153,35 @@
           {% endif %}
         </div>
       </section>
+
+      <section id="explorer" class="explorer-section">
+        <div class="explorer-eyebrow">Interactive 3D Service</div>
+        <h2>3D Anatomy Explorer</h2>
+        <p class="explorer-intro">Explore anatomy in 3D with clear visual landmarks. This module is designed for educational orientation and helps users quickly understand common fracture-prone regions.</p>
+        <div class="explorer-actions">
+          <a href="/viewer-3d?region=humerus" class="btn explorer-cta">Open 3D Viewer</a>
+        </div>
+        <div class="explorer-grid">
+          <div class="card explorer-card">
+            <div class="label">Visual Clinical Legend</div>
+            <ul class="explorer-list">
+              <li>Humerus: surgical neck, shaft, distal humerus</li>
+              <li>Wrist: distal radius, scaphoid, ulnar styloid</li>
+              <li>Hand: metacarpals, phalanges, carpometacarpal region</li>
+            </ul>
+          </div>
+          <div class="card explorer-card">
+            <div class="label">Clinical Disclaimer</div>
+            <p class="assistive-note strong-note">Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="who">
+        <h2>Who Can Use It?</h2>
+        <p>The platform is perfect for professionals, students, researchers, or anyone interested in medical imaging. No prior experience is required to explore and understand X-ray results efficiently.</p>
+      </section>
+
       <section id="why">
         <h2>Why Choose Fracture Detection?</h2>
         <p>The service combines speed, accuracy, and clarity, offering a reliable tool for learning, research, and professional review. Technology helps you see more, understand more, and make X-ray analysis faster and easier than ever before.</p>
