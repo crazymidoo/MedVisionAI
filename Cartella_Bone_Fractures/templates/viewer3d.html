@@ -9,21 +9,20 @@
     html, body { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; }
     body { background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 50%, #111f42 100%); }
     .layout { width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 320px; gap: 16px; padding: 16px; }
-    .viewport { border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.2); background: #0a1117; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative; }
+    .viewport { position: relative; border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.2); background: #0a1117; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     #canvas { width: 100%; height: 100%; display: block; }
-    .badge { position: absolute; top: 14px; left: 14px; background: rgba(8, 17, 34, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); color: #7dd3fc; font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 999px; backdrop-filter: blur(8px); z-index: 10; }
-    .panel { border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; background: rgba(14, 24, 44, 0.7); backdrop-filter: blur(12px); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-    .panel::-webkit-scrollbar { width: 6px; }
-    .panel::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
-    h1 { font-size: 22px; color: #e2e8f0; line-height: 1.1; letter-spacing: -0.02em; margin: 0; }
+    .badge { position: absolute; top: 14px; left: 14px; background: rgba(8, 17, 34, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); color: #7dd3fc; font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 999px; z-index: 10; }
+    .panel { border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; background: rgba(14, 24, 44, 0.75); backdrop-filter: blur(10px); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+    h1 { font-size: 22px; color: #e2e8f0; line-height: 1.1; letter-spacing: -0.02em; }
     .subtitle { font-size: 13px; color: #94a3b8; line-height: 1.6; }
     .card { border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 10px; padding: 10px; background: rgba(13, 24, 44, 0.5); font-size: 12px; }
-    .card h3 { font-size: 11px; font-weight: 700; color: #cbd5e1; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.05em; }
-    .card p { color: #94a3b8; line-height: 1.5; margin: 0; }
-    .status { padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); font-size: 12px; color: #cbd5e1; min-height: 50px; display: flex; align-items: center; }
-    .status.ready { color: #86e1a0; border-color: rgba(134, 225, 160, 0.3); }
+    .card h3 { font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .card p { color: #94a3b8; line-height: 1.5; }
+    .status { padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); font-size: 12px; color: #cbd5e1; min-height: 48px; display: flex; align-items: center; }
+    .status.ready { color: #86e1a0; border-color: rgba(134, 225, 160, 0.35); }
     .back { color: #38bdf8; text-decoration: none; font-size: 12px; font-weight: 600; }
     .back:hover { text-decoration: underline; }
+    #debug { position: absolute; bottom: 20px; left: 20px; background: rgba(0, 90, 0, 0.9); color: #88ff88; font-family: monospace; font-size: 10px; line-height: 1.4; padding: 10px; border-radius: 8px; border: 1px solid #2aff2a; max-width: 320px; max-height: 200px; overflow-y: auto; z-index: 20; }
     @media (max-width: 1024px) { .layout { grid-template-columns: 1fr; grid-template-rows: 1fr 280px; } }
   </style>
 </head>
@@ -32,12 +31,14 @@
     <section class="viewport">
       <div class="badge">Interactive Medical 3D</div>
       <canvas id="canvas"></canvas>
+      <div id="debug"></div>
     </section>
+
     <aside class="panel">
       <a class="back" href="/">← Dashboard</a>
       <div>
         <h1>Human Bone 3D</h1>
-        <p class="subtitle">Viewer interattivo con rendering realistico.</p>
+        <p class="subtitle">Viewer interattivo con modello GLB realistico.</p>
       </div>
       <div class="card">
         <h3>Controlli</h3>
@@ -47,305 +48,232 @@
         <h3>Frattura</h3>
         <p>Indicatore rosso con animazione pulsante</p>
       </div>
+      <div class="card">
+        <h3>Sorgente Clinica</h3>
+        <p>BodyParts3D (DBCLS), Right Humerus FMA23130, CC BY-SA 2.1 JP</p>
+      </div>
       <div id="status" class="status">Caricamento...</div>
     </aside>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
   <script>
     const canvas = document.getElementById('canvas');
+    const debugEl = document.getElementById('debug');
     const statusEl = document.getElementById('status');
+    const logs = [];
 
-    // Scene setup
+    function dbg(msg) {
+      logs.push(msg);
+      if (logs.length > 14) logs.shift();
+      debugEl.innerHTML = logs.map((line) => line.replace(/</g, '&lt;')).join('<br>');
+      console.log(msg);
+    }
+
+    dbg('THREE init: ' + (typeof THREE !== 'undefined' ? 'OK' : 'FAIL'));
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1117);
-    scene.fog = new THREE.Fog(0x0a1117, 10, 28);
+    scene.background = new THREE.Color(0x1a1a1a);
+    scene.fog = new THREE.Fog(0x1a1a1a, 14, 40);
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(2, 1.5, 8);
+    const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0.7, 9);
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.22;
+    dbg('Renderer OK');
 
-    // Lights
-    const ambLight = new THREE.AmbientLight(0xb7c4d9, 0.48);
-    scene.add(ambLight);
+    scene.add(new THREE.AmbientLight(0xb8a898, 0.85));
+    scene.add(new THREE.HemisphereLight(0xfaf3ea, 0x2b3038, 0.7));
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.3);
-    keyLight.position.set(5, 7, 4);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(1024, 1024);
-    keyLight.shadow.camera.far = 30;
-    keyLight.shadow.bias = -0.0002;
-    scene.add(keyLight);
+    const key = new THREE.DirectionalLight(0xf8f3eb, 1.5);
+    key.position.set(7, 9, 6);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.far = 40;
+    key.shadow.bias = -0.00005;
+    key.shadow.normalBias = 0.02;
+    scene.add(key);
 
-    const pointLight = new THREE.PointLight(0x7dd3fc, 1.2, 20);
-    pointLight.position.set(-4, 3, 5);
-    scene.add(pointLight);
+    const rim = new THREE.DirectionalLight(0xcdbaa0, 0.7);
+    rim.position.set(-6, 5, 7);
+    scene.add(rim);
 
-    const fillLight = new THREE.DirectionalLight(0x9ca3af, 0.4);
-    fillLight.position.set(-3, 1.5, -3);
-    scene.add(fillLight);
+    const fill = new THREE.DirectionalLight(0xa89a8f, 0.45);
+    fill.position.set(-4, 2, -4);
+    scene.add(fill);
 
-    // Floor
+    dbg('Lights OK');
+
     const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(10, 64),
-      new THREE.ShadowMaterial({ opacity: 0.2 })
+      new THREE.CircleGeometry(12, 64),
+      new THREE.ShadowMaterial({ opacity: 0.28 })
     );
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -2;
+    floor.position.y = -2.6;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Create procedural normal map for bone surface detail
-    function createNormalMap() {
-      const cvs = document.createElement('canvas');
-      cvs.width = cvs.height = 512;
-      const ctx = cvs.getContext('2d');
-      
-      // Base perlin-like noise
-      ctx.fillStyle = '#7f7f7f';
-      ctx.fillRect(0, 0, 512, 512);
-      
-      // Surface pores and texture
-      for (let i = 0; i < 3000; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 512;
-        const size = 0.5 + Math.random() * 2.5;
-        const depth = 120 + Math.random() * 40;
-        ctx.fillStyle = `rgb(${depth},${depth},${128 + Math.random() * 40})`;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      // Linear surface striations
-      ctx.strokeStyle = 'rgba(100,100,128,0.3)';
-      ctx.lineWidth = 0.7;
-      for (let i = 0; i < 80; i++) {
-        ctx.beginPath();
-        ctx.moveTo(0, i * 6.4);
-        ctx.lineTo(512, i * 6.4 + Math.sin(i) * 20);
-        ctx.stroke();
-      }
-      
-      const tex = new THREE.CanvasTexture(cvs);
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(3, 8);
-      return tex;
-    }
-    const normalMap = createNormalMap();
-
-    // Create realistic bone using advanced geometry
-    function createBone() {
+    function createFallbackBone() {
       const group = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xf4e8db, roughness: 0.67, metalness: 0.004 });
 
-      // Diafisi (corpo dell'osso) con profilo anatomicamente accurato
-      const profile = [
-        new THREE.Vector2(0.00, 0.0),
-        new THREE.Vector2(0.18, 0.05),
-        new THREE.Vector2(0.32, 0.15),
-        new THREE.Vector2(0.45, 0.35),
-        new THREE.Vector2(0.52, 0.60),
-        new THREE.Vector2(0.58, 1.10),
-        new THREE.Vector2(0.62, 1.60),
-        new THREE.Vector2(0.65, 2.10),
-        new THREE.Vector2(0.68, 2.80),
-        new THREE.Vector2(0.70, 3.40),
-        new THREE.Vector2(0.71, 4.00),
-        new THREE.Vector2(0.72, 4.60),
-        new THREE.Vector2(0.70, 5.00),
-        new THREE.Vector2(0.65, 5.25),
-        new THREE.Vector2(0.58, 5.40),
-        new THREE.Vector2(0.48, 5.50),
-        new THREE.Vector2(0.35, 5.55),
-        new THREE.Vector2(0.18, 5.58),
-        new THREE.Vector2(0.00, 5.60)
-      ];
-      
-      const shaftGeo = new THREE.LatheGeometry(profile, 128, 0, Math.PI * 2);
-      shaftGeo.computeVertexNormals();
-      const shaft = new THREE.Mesh(shaftGeo, new THREE.MeshStandardMaterial({
-        color: 0xf5e6d3,
-        roughness: 0.75,
-        metalness: 0.01,
-        roughnessMap: roughMap,
-        side: THREE.FrontSide
-      }));
-      shaft.scale.set(1, 1.15, 1);
-      shaft.position.y = -0.9;
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 7.5, 32, 48), mat);
       shaft.castShadow = true;
       shaft.receiveShadow = true;
       group.add(shaft);
 
-      // Epifisi prossimale (testa superiore) - più grande e complessa
-      const topHeadGeo = new THREE.IcosahedronGeometry(0.95, 6);
-      const topHead = new THREE.Mesh(topHeadGeo, new THREE.MeshStandardMaterial({
-        color: 0xebd9c3,
-        roughness: 0.72,
-        metalness: 0.02,
-        roughnessMap: roughMap
-      }));
-      topHead.scale.set(0.95, 1.05, 0.88);
-      topHead.position.y = 4.8;
-      topHead.castShadow = true;
-      topHead.receiveShadow = true;
-      group.add(topHead);
+      const top = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 4), mat);
+      top.position.y = 4;
+      top.scale.set(0.85, 1, 0.78);
+      top.castShadow = true;
+      top.receiveShadow = true;
+      group.add(top);
 
-      // Epifisi distale (testa inferiore) - più piccola
-      const bottomHeadGeo = new THREE.IcosahedronGeometry(0.72, 6);
-      const bottomHead = new THREE.Mesh(bottomHeadGeo, new THREE.MeshStandardMaterial({
-        color: 0xebd9c3,
-        roughness: 0.72,
-        metalness: 0.02,
-        roughnessMap: roughMap
-      }));
-      bottomHead.scale.set(0.82, 0.95, 0.78);
-      bottomHead.position.y = -5.8;
-      bottomHead.castShadow = true;
-      bottomHead.receiveShadow = true;
-      group.add(bottomHead);
+      const bottom = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 4), mat);
+      bottom.position.y = -4.15;
+      bottom.scale.set(0.8, 0.92, 0.72);
+      bottom.castShadow = true;
+      bottom.receiveShadow = true;
+      group.add(bottom);
 
-      // Tuberosità prossimale (piccolo bump anatomico)
-      const tibGeo = new THREE.BoxGeometry(0.35, 0.55, 0.42);
-      const tib = new THREE.Mesh(tibGeo, new THREE.MeshStandardMaterial({
-        color: 0xf5e6d3,
-        roughness: 0.76,
-        metalness: 0.01,
-        roughnessMap: roughMap
-      }));
-      tib.position.set(0, 4.1, 0.48);
-      tib.rotation.z = 0.15;
-      tib.castShadow = true;
-      tib.receiveShadow = true;
-      group.add(tib);
-
-      group.position.y = 0.5;
-      group.castShadow = true;
       return group;
     }
 
-    // Create fracture
-    function createFracture() {
-      const group = new THREE.Group();
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.095, 24, 24),
-        new THREE.MeshStandardMaterial({ color: 0xff5661, emissive: 0xff0015, emissiveIntensity: 1.2, roughness: 0.35, metalness: 0.05 }));
-      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24),
-        new THREE.MeshStandardMaterial({ color: 0xff7a85, emissive: 0xff2f3f, emissiveIntensity: 0.8, transparent: true, opacity: 0.3 }));
-      const light = new THREE.PointLight(0xff3b4c, 0.9, 2.5);
-      group.add(core, halo, light);
-      group.position.set(0.24, -0.55, 0.22);
-      return { group, core, halo, light };
-    }
-
-    // Add to scene
-    const bone = createBone();
+    let bone = createFallbackBone();
     scene.add(bone);
-    const fracture = createFracture();
-    scene.add(fracture.group);
+    dbg('Bone fallback visible');
 
-    // Controls setup
-    let controls;
-    const mouseState = { x: 0, y: 0, down: false, deltaX: 0, deltaY: 0 };
-    let rotation = { x: 0, y: 0 };
-    let distance = 8;
-    const target = new THREE.Vector3(0, 0.8, 0);
-
-    try {
-      if (typeof THREE.OrbitControls !== 'undefined') {
-        controls = new THREE.OrbitControls(camera, canvas);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.06;
-        controls.enablePan = true;
-        controls.minDistance = 3;
-        controls.maxDistance = 14;
-        controls.target.copy(target);
-        controls.update();
-        statusEl.textContent = 'Pronto (OrbitControls)';
-      }
-    } catch (e) {
-      console.warn('OrbitControls failed, using manual controls:', e);
+    let controls = null;
+    if (typeof THREE.OrbitControls === 'function') {
+      controls = new THREE.OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.minDistance = 4;
+      controls.maxDistance = 16;
+      controls.target.set(0, 0.25, 0);
+      controls.update();
+      dbg('OrbitControls OK');
+    } else {
+      dbg('OrbitControls missing');
     }
 
-    // Manual fallback controls
-    canvas.addEventListener('mousedown', (e) => {
-      mouseState.down = true;
-      mouseState.x = e.clientX;
-      mouseState.y = e.clientY;
-    });
+    const fractureCore = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 20, 20),
+      new THREE.MeshStandardMaterial({ color: 0xff5661, emissive: 0xff0015, emissiveIntensity: 1.2, roughness: 0.35 })
+    );
+    const fractureHalo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.14, 20, 20),
+      new THREE.MeshStandardMaterial({ color: 0xff7a85, emissive: 0xff2f3f, emissiveIntensity: 0.75, transparent: true, opacity: 0.25 })
+    );
+    const fractureLight = new THREE.PointLight(0xff3b4c, 0.8, 2.3);
+    const fractureGroup = new THREE.Group();
+    fractureGroup.add(fractureCore, fractureHalo, fractureLight);
+    fractureGroup.position.set(0.22, 1.1, 0.25);
+    scene.add(fractureGroup);
 
-    canvas.addEventListener('mousemove', (e) => {
-      const deltaX = e.clientX - mouseState.x;
-      const deltaY = e.clientY - mouseState.y;
-      if (mouseState.down && !controls) {
-        rotation.y += deltaX * 0.003;
-        rotation.x += deltaY * 0.003;
-      }
-      mouseState.x = e.clientX;
-      mouseState.y = e.clientY;
-    });
+    statusEl.textContent = 'Caricamento modello anatomico BodyParts3D...';
 
-    canvas.addEventListener('mouseup', () => { mouseState.down = false; });
-    canvas.addEventListener('mouseleave', () => { mouseState.down = false; });
+    const canLoadGltf = typeof THREE.GLTFLoader === 'function';
+    dbg('GLTFLoader: ' + (canLoadGltf ? 'OK' : 'MISSING'));
 
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      if (controls) {
-        controls.dollyIn(e.deltaY > 0 ? 1.05 : 0.95);
-        controls.dollyOut(e.deltaY > 0 ? 0.95 : 1.05);
-      } else {
-        distance += e.deltaY * 0.003;
-        distance = Math.max(3, Math.min(14, distance));
-      }
-    }, { passive: false });
+    if (canLoadGltf) {
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        '/static/models/bodyparts3d_right_humerus.glb',
+        (gltf) => {
+          scene.remove(bone);
+          bone = gltf.scene;
+          bone.position.set(0, 0, 0);
+          bone.traverse((child) => {
+            if (child.isMesh) {
+              if (child.geometry && !child.geometry.attributes.normal) {
+                child.geometry.computeVertexNormals();
+              }
+              child.castShadow = true;
+              child.receiveShadow = false;
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0xf4e8db,
+                roughness: 0.6,
+                metalness: 0.01,
+                emissive: 0x1d1712,
+                emissiveIntensity: 0.04,
+                side: THREE.DoubleSide
+              });
+            }
+          });
 
-    statusEl.textContent = 'Pronto';
-    statusEl.classList.add('ready');
+          const box = new THREE.Box3().setFromObject(bone);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const targetSize = 5.0;
+          const scale = targetSize / maxDim;
 
-    // Animation
+          bone.position.sub(center);
+          bone.scale.setScalar(scale);
+
+          if (controls) {
+            controls.target.set(0, 0, 0);
+            camera.position.set(0.9, 0.45, 7.5);
+            controls.update();
+          }
+
+          scene.add(bone);
+          statusEl.textContent = 'Modello GLB caricato';
+          statusEl.classList.add('ready');
+          dbg('GLB loaded ✓ size=' + maxDim.toFixed(2) + ' scale=' + scale.toFixed(4));
+        },
+        (p) => {
+          if (p.total > 0) {
+            const percent = Math.round((p.loaded / p.total) * 100);
+            dbg('Loading ' + percent + '%');
+          }
+        },
+        () => {
+          statusEl.textContent = 'Errore GLB: fallback attivo';
+          dbg('GLB load failed, fallback active');
+        }
+      );
+    } else {
+      statusEl.textContent = 'GLTFLoader non disponibile, fallback attivo';
+    }
+
     const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
-      
-      // Fracture animation
-      const pulse = 1 + Math.sin(elapsed * 4.2) * 0.12;
-      fracture.core.scale.setScalar(pulse);
-      fracture.halo.scale.setScalar(1 + Math.sin(elapsed * 4.2 + 0.7) * 0.2);
-      fracture.core.material.emissiveIntensity = 1.1 + Math.sin(elapsed * 4.2) * 0.4;
-      fracture.halo.material.opacity = 0.24 + Math.sin(elapsed * 4.2 + 0.9) * 0.08;
-      fracture.light.intensity = 0.8 + Math.sin(elapsed * 4.2) * 0.35;
-      
-      // Manual controls (fallback)
-      if (!controls) {
-        const x = Math.cos(rotation.y) * Math.sin(rotation.x) * distance;
-        const y = Math.cos(rotation.x) * distance;
-        const z = Math.sin(rotation.y) * Math.sin(rotation.x) * distance;
-        camera.position.set(x + target.x, y + target.y, z + target.z);
-        camera.lookAt(target);
-      }
-      
+      const t = clock.getElapsedTime();
+
+      const pulse = 1 + Math.sin(t * 4.2) * 0.12;
+      fractureCore.scale.setScalar(pulse);
+      fractureHalo.scale.setScalar(1 + Math.sin(t * 4.2 + 0.7) * 0.18);
+
       if (controls) controls.update();
       renderer.render(scene, camera);
     }
 
     function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(w, h);
     }
 
     window.addEventListener('resize', onResize);
+    onResize();
     animate();
+
+    dbg('Ready');
   </script>
 </body>
 </html>
