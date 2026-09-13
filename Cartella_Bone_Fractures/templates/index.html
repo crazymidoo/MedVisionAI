@@ -6,7 +6,7 @@
   <title>MedVisionAI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/preview.js', v='upload-fix-2') }}" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/IntenseImages/1.0.0/Intense.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@9.4.0/dist/panzoom.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
@@ -82,7 +82,7 @@
         <p>Simply upload an X-ray image in JPG or PNG format. The AI automatically detects possible fractures and generates easy-to-read reports for further review.</p>
       </section>
 
-      <section id="analysis" class="demo-section">
+      <section id="analysis" class="demo-section" data-has-results="{{ 'true' if original_image and result_image else 'false' }}">
         <div class="explorer-eyebrow">Analyze X-rays</div>
         <h2>X-ray Analysis</h2>
         <div class="grid">
@@ -92,14 +92,17 @@
                 <div class="icon">📁</div>
                 <div>
                   <p>Drag an image here</p>
-                  <small>or click to select a file (JPG, PNG)</small>
+                  <small>or click to select an image (JPG, PNG, WEBP, TIFF)</small>
                 </div>
-                <input type="file" id="file-input" name="file" accept="image/*" hidden required>
+                <input type="file" id="file-input" name="file" accept=".jpg,.jpeg,.png,.bmp,.tif,.tiff,.webp,image/jpeg,image/png,image/webp" hidden required>
               </div>
               <div class="controls">
-                <button type="submit" class="btn">Upload & Analyze</button>
+                <button type="button" id="analyze-button" class="btn">Upload & Analyze</button>
                 <span class="kv">YOLOv8 Analysis</span>
               </div>
+              {% if upload_error %}
+              <p class="upload-error" role="alert">{{ upload_error }}</p>
+              {% endif %}
             </form>
             <div id="preview-container">
               <div class="empty-state" id="preview-empty-state">

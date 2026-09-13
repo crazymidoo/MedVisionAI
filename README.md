@@ -83,6 +83,10 @@ Supported upload formats:
 1. png
 2. jpg
 3. jpeg
+4. bmp
+5. tif
+6. tiff
+7. webp
 
 ## Train a Model
 

@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 RESULT_FOLDER = os.path.join(BASE_DIR, "results")
 MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "best.pt")
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp', 'tif', 'tiff', 'webp'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
@@ -199,6 +199,7 @@ def allowed_file(filename):
 def index():
     original_image = None
     result_image = None
+    upload_error = None
     accuracy = None
     confidences = []
     fracture_boxes = []
@@ -211,7 +212,25 @@ def index():
     if request.method == "POST":
         file = request.files.get("file")
         if not file or file.filename == "" or not allowed_file(file.filename):
-            return "Invalid file"
+            app.logger.warning(
+                "Upload rifiutato: filename=%r content_type=%r",
+                file.filename if file else None,
+                file.content_type if file else None,
+            )
+            upload_error = "Seleziona un'immagine JPG, JPEG, PNG, WEBP o TIFF prima di avviare l'analisi."
+            return render_template("index.html",
+                                   original_image=original_image,
+                                   result_image=result_image,
+                                   accuracy=accuracy,
+                                   confidences=confidences,
+                                   fracture_boxes=fracture_boxes,
+                                   selected_region=selected_region,
+                                   anatomy_input=anatomy_input,
+                                   region_labels=REGION_LABELS,
+                                   ai_support_text=ai_support_text,
+                                   ai_quadrant=ai_quadrant,
+                                   ai_focus_id=ai_focus_id,
+                                   upload_error=upload_error), 400
 
         anatomy_input = (request.form.get("anatomy_region", "auto") or "auto").strip().lower()
         if anatomy_input not in {"auto", *REGION_LABELS.keys()}:
@@ -274,7 +293,8 @@ def index():
                            region_labels=REGION_LABELS,
                            ai_support_text=ai_support_text,
                            ai_quadrant=ai_quadrant,
-                           ai_focus_id=ai_focus_id)
+                           ai_focus_id=ai_focus_id,
+                           upload_error=upload_error)
 
 @app.route("/uploads/<filename>")
 def send_upload(filename):

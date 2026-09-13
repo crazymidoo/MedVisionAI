@@ -530,6 +530,12 @@ section p + p{margin-top:10px;}
   gap:12px;
 }
 
+.upload-error{
+  margin:14px 0 0;
+  color:#b42318;
+  font-weight:600;
+}
+
 .meta{
   display:flex;
   flex-direction:column;

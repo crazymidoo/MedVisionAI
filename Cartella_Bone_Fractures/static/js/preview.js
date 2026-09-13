@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const fileInput = document.getElementById("file-input");
   const previewContainer = document.getElementById("preview-container");
   const form = fileInput ? fileInput.closest("form") : null;
+  const analyzeButton = document.getElementById("analyze-button");
   const resultImage = document.getElementById("result-image");
   const downloadBtn = document.getElementById("download-pdf");
   const toggleBtn = document.querySelector('.toggle-theme');
@@ -114,8 +115,10 @@ document.addEventListener("DOMContentLoaded", () => {
     fileInput.addEventListener("change", () => {
       if (fileInput.files.length) {
         showPreview(fileInput.files[0]);
+        if (analyzeButton) analyzeButton.textContent = "Analyze Selected Image";
       } else if (previewContainer) {
         previewContainer.innerHTML = initialPreviewMarkup;
+        if (analyzeButton) analyzeButton.textContent = "Upload & Analyze";
       }
     });
   }
@@ -142,16 +145,18 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.readAsDataURL(file);
   }
 
-  if (form) form.addEventListener("submit", () => {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.classList.add('disabled');
-      const spinner = document.createElement("span");
-      spinner.className = "loading";
-      spinner.innerHTML = `<span class="spinner" aria-hidden="true"></span><span class="helper">Analisi in corso...</span>`;
-      submitBtn.parentNode && submitBtn.parentNode.appendChild(spinner);
+  if (analyzeButton && form) analyzeButton.addEventListener("click", () => {
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+      if (fileInput) fileInput.click();
+      return;
     }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    analyzeButton.disabled = true;
+    analyzeButton.classList.add('disabled');
+    analyzeButton.textContent = "Analisi in corso...";
+    if (submitBtn) submitBtn.disabled = true;
+    form.submit();
   });
 
   async function initResultInteractions(){
@@ -206,4 +211,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderConfidenceChart();
 
   initResultInteractions();
+
+  const analysisSection = document.getElementById("analysis");
+  if (analysisSection && analysisSection.dataset.hasResults === "true") {
+    analysisSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 });
