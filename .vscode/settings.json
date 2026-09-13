@@ -1,0 +1,16 @@
+{
+  "explorer.compactFolders": false,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/*.cache": true,
+    "**/*.pyc": true,
+    "**/combined_dataset": true,
+    "**/dataset_completo": true,
+    "**/dataset_completo2": true,
+    "**/datasets": true,
+    "**/FracAtlas": true,
+    "**/runs": true
+  }
+}
