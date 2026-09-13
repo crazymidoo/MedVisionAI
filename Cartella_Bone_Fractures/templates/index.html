@@ -13,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script>
     window.confidences = {{ confidences | tojson | safe }};
+    window.fractureMeshUrl = {{ fracture_mesh_url | tojson | safe }};
   </script>
 </head>
 <body>
@@ -162,7 +163,7 @@
         <h2>3D Anatomy Explorer</h2>
         <p class="explorer-intro">Explore anatomy in 3D with clear visual landmarks. This module is designed for educational orientation and helps users quickly understand common fracture-prone regions.</p>
         <div class="explorer-actions">
-          <a href="/viewer-3d?region=humerus" class="btn explorer-cta">Open 3D Viewer</a>
+          <a href="{{ url_for('viewer_3d', region=selected_region, focus=ai_focus_id, quadrant=ai_quadrant, mesh=fracture_mesh_url or '', px=fracture_point.x, py=fracture_point.y, pz=fracture_point.z) }}" class="btn explorer-cta">Open 3D Viewer</a>
         </div>
         <div class="explorer-grid">
           <div class="card explorer-card">

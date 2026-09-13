@@ -1,19 +1,26 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, url_for
 from ultralytics import YOLO
 import cv2
 import os
 from werkzeug.utils import secure_filename
+
+try:
+    from .fracture_mesh import mask_from_box, write_obj_from_mask
+except ImportError:
+    from fracture_mesh import mask_from_box, write_obj_from_mask
 
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 RESULT_FOLDER = os.path.join(BASE_DIR, "results")
+MESH_FOLDER = os.path.join(RESULT_FOLDER, "meshes")
 MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "best.pt")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp', 'tif', 'tiff', 'webp'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
+os.makedirs(MESH_FOLDER, exist_ok=True)
 
 model = YOLO(MODEL_PATH)
 CLASS_NAMES = ["FRACTURE"]
@@ -199,6 +206,8 @@ def allowed_file(filename):
 def index():
     original_image = None
     result_image = None
+    fracture_mesh_url = None
+    fracture_point = {"x": 0.0, "y": 0.0, "z": 0.0}
     upload_error = None
     accuracy = None
     confidences = []
@@ -230,6 +239,8 @@ def index():
                                    ai_support_text=ai_support_text,
                                    ai_quadrant=ai_quadrant,
                                    ai_focus_id=ai_focus_id,
+                                   fracture_mesh_url=fracture_mesh_url,
+                                   fracture_point=fracture_point,
                                    upload_error=upload_error), 400
 
         anatomy_input = (request.form.get("anatomy_region", "auto") or "auto").strip().lower()
@@ -279,6 +290,12 @@ def index():
         cv2.imwrite(result_path, img_pred)
         result_image = filename
         ai_support_text, ai_quadrant, ai_focus_id = build_ai_support(fracture_boxes, selected_region)
+        if fracture_boxes:
+            mesh_name = f"{os.path.splitext(filename)[0]}.obj"
+            mesh_path = os.path.join(MESH_FOLDER, mesh_name)
+            mesh = write_obj_from_mask(mask_from_box(fracture_boxes[0], img_h, img_w), mesh_path)
+            fracture_mesh_url = url_for("send_mesh", filename=mesh_name)
+            fracture_point = mesh["point"]
 
     confidences = confidences or []
     fracture_boxes = fracture_boxes or []
@@ -294,6 +311,8 @@ def index():
                            ai_support_text=ai_support_text,
                            ai_quadrant=ai_quadrant,
                            ai_focus_id=ai_focus_id,
+                           fracture_mesh_url=fracture_mesh_url,
+                           fracture_point=fracture_point,
                            upload_error=upload_error)
 
 @app.route("/uploads/<filename>")
@@ -303,6 +322,10 @@ def send_upload(filename):
 @app.route("/results/<filename>")
 def send_result(filename):
     return send_from_directory(RESULT_FOLDER, filename)
+
+@app.route("/meshes/<filename>")
+def send_mesh(filename):
+    return send_from_directory(MESH_FOLDER, filename)
 
 @app.route("/signin")
 def signin():
@@ -317,6 +340,15 @@ def viewer_3d():
     region = (request.args.get("region") or "humerus").strip().lower()
     focus_id = (request.args.get("focus") or "").strip().lower()
     quadrant = (request.args.get("quadrant") or "").strip().lower()
+    mesh_url = (request.args.get("mesh") or "").strip()
+    try:
+        fracture_point = {
+            "x": float(request.args.get("px", 0)),
+            "y": float(request.args.get("py", 0)),
+            "z": float(request.args.get("pz", 0)),
+        }
+    except ValueError:
+        fracture_point = {"x": 0.0, "y": 0.0, "z": 0.0}
 
     model_config = resolve_model_config(region)
     valid_focus_ids = {site["id"] for site in model_config["frequent_sites"]}
@@ -328,6 +360,8 @@ def viewer_3d():
         model_config=model_config,
         initial_focus_id=focus_id,
         ai_quadrant_label=human_quadrant_label(quadrant) if quadrant else "",
+        fracture_mesh_url=mesh_url,
+        fracture_point=fracture_point,
     )
 
 if __name__ == "__main__":

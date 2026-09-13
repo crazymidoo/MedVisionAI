@@ -1,0 +1,11 @@
+flask
+ultralytics
+opencv-python-headless
+werkzeug
+torch
+torchvision
+fastapi
+uvicorn
+numpy
+scikit-image
+python-multipart

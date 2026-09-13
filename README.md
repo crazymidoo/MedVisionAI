@@ -42,41 +42,45 @@ Note: the project is under active development, so some paths/configurations may 
 
 ## Setup
 
-### 1) Enter app folder
+### Quick start (Codespaces)
 
-1. cd Cartella_Bone_Fractures
+From the repository root, run:
 
-### 2) (Recommended) Create and activate virtual environment
+```bash
+./start.sh
+```
 
-1. python -m venv .venv
-2. source .venv/bin/activate
+The script installs the Python dependencies from [requirements.txt](requirements.txt), enters the app directory automatically, and starts Flask at `http://127.0.0.1:5000`. It also starts the fracture mesh API at `http://127.0.0.1:8000`.
 
-### 3) Install dependencies
+FastAPI documentation is available at `http://127.0.0.1:8000/docs`.
 
-1. pip install --upgrade pip
-2. pip install flask ultralytics opencv-python werkzeug torch torchvision
+### Manual setup
 
-### 4) Linux/Codespaces/WSL OpenCV dependency (if needed)
-
-If you get this error:
-
-ImportError: libGL.so.1: cannot open shared object file
-
-Install system package:
-
-1. sudo apt-get update
-2. sudo apt-get install -y libgl1
+```bash
+cd Cartella_Bone_Fractures
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r ../requirements.txt
+python app.py
+```
 
 ## Run the Web App
 
-From [Cartella_Bone_Fractures](Cartella_Bone_Fractures):
-
-1. python app.py
+The quick-start script is the recommended way to run the web app. If dependencies are already installed, pip will leave them unchanged.
 
 Available pages:
 
 1. / : main dashboard
 2. /viewer-3d?region=humerus : 3D explorer
+
+### 3D fracture pipeline
+
+After a YOLO detection, the Flask app converts the detected 2D region into a
+thin 3D volume and polygonizes it with Marching Cubes. The generated OBJ is
+stored in `Cartella_Bone_Fractures/results/meshes/` and loaded by the Three.js
+viewer as a red overlay with an AI fracture pin. The standalone FastAPI
+endpoint `POST /api/fracture-mesh` accepts an image plus either a binary mask or
+a JSON bounding box such as `{"x1":0.2,"y1":0.3,"x2":0.5,"y2":0.6}`.
 
 Supported upload formats:
 

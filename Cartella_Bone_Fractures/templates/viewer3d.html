@@ -75,6 +75,10 @@
         <h3>Highlighted Site</h3>
         <p id="site-description">Click a legend item to see details.</p>
       </div>
+      <div class="card fracture-card">
+        <h3>AI fracture overlay</h3>
+        <p id="fracture-description">No generated fracture mesh was supplied.</p>
+      </div>
       <div class="card disclaimer">
         <h3>Disclaimer</h3>
         <p>Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
@@ -90,14 +94,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 
   <script>
     const MODEL_CONFIG = {{ model_config | tojson | safe }};
     const INITIAL_FOCUS_ID = {{ initial_focus_id | tojson | safe }};
+    const FRACTURE_MESH_URL = {{ fracture_mesh_url | tojson | safe }};
+    const FRACTURE_POINT = {{ fracture_point | tojson | safe }};
     const canvas = document.getElementById('canvas');
     const debugEl = document.getElementById('debug');
     const statusEl = document.getElementById('status');
     const siteDescriptionEl = document.getElementById('site-description');
+    const fractureDescriptionEl = document.getElementById('fracture-description');
     const logs = [];
 
     function dbg(msg) {
@@ -185,6 +193,50 @@
 
     let bone = createFallbackBone();
     scene.add(bone);
+    let fractureOverlay = null;
+    let fracturePin = null;
+
+    function addFracturePin() {
+      if (fracturePin) scene.remove(fracturePin);
+      fracturePin = new THREE.Mesh(
+        new THREE.SphereGeometry(0.13, 24, 24),
+        new THREE.MeshStandardMaterial({ color: 0xff1838, emissive: 0xff1838, emissiveIntensity: 1.2 })
+      );
+      fracturePin.position.set(FRACTURE_POINT.x * 2.2, FRACTURE_POINT.y * 2.2, FRACTURE_POINT.z * 2.2);
+      scene.add(fracturePin);
+    }
+
+    function loadFractureOverlay() {
+      if (!FRACTURE_MESH_URL || typeof THREE.OBJLoader !== 'function') {
+        fractureDescriptionEl.textContent = 'Open this viewer from an analyzed X-ray to show the AI mesh.';
+        return;
+      }
+      const loader = new THREE.OBJLoader();
+      loader.load(FRACTURE_MESH_URL, (object) => {
+        object.scale.setScalar(2.2);
+        object.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0xff1838,
+              emissive: 0x7f0017,
+              emissiveIntensity: 0.65,
+              transparent: true,
+              opacity: 0.92,
+              side: THREE.DoubleSide,
+              roughness: 0.28
+            });
+          }
+        });
+        fractureOverlay = object;
+        scene.add(fractureOverlay);
+        addFracturePin();
+        fractureDescriptionEl.textContent = 'AI mesh loaded from the detected fracture region.';
+        statusEl.textContent = '3D fracture overlay ready';
+        statusEl.classList.add('ready');
+      }, undefined, () => {
+        fractureDescriptionEl.textContent = 'The AI mesh could not be loaded; anatomy model remains available.';
+      });
+    }
     dbg('Bone fallback visible');
 
     let controls = null;
@@ -312,6 +364,8 @@
     } else {
       statusEl.textContent = 'GLTFLoader unavailable, fallback active';
     }
+
+    loadFractureOverlay();
 
     document.querySelectorAll('.site-btn').forEach((btn) => {
       btn.addEventListener('click', () => activateSite(btn.dataset.siteId));
