@@ -130,14 +130,15 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.22;
+    renderer.toneMappingExposure = 1.05;
+    renderer.physicallyCorrectLights = true;
     dbg('Renderer OK');
 
-    scene.add(new THREE.AmbientLight(0xb8a898, 0.85));
-    scene.add(new THREE.HemisphereLight(0xfaf3ea, 0x2b3038, 0.7));
+    scene.add(new THREE.AmbientLight(0x8f98a6, 0.34));
+    scene.add(new THREE.HemisphereLight(0xfff7ea, 0x202633, 0.82));
 
-    const key = new THREE.DirectionalLight(0xf8f3eb, 1.5);
-    key.position.set(7, 9, 6);
+    const key = new THREE.DirectionalLight(0xfff1dc, 3.0);
+    key.position.set(5, 7, 8);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
     key.shadow.camera.far = 40;
@@ -145,12 +146,12 @@
     key.shadow.normalBias = 0.02;
     scene.add(key);
 
-    const rim = new THREE.DirectionalLight(0xcdbaa0, 0.7);
-    rim.position.set(-6, 5, 7);
+    const rim = new THREE.DirectionalLight(0x9db8d4, 1.15);
+    rim.position.set(-7, 3, -5);
     scene.add(rim);
 
-    const fill = new THREE.DirectionalLight(0xa89a8f, 0.45);
-    fill.position.set(-4, 2, -4);
+    const fill = new THREE.DirectionalLight(0xffd5b5, 0.28);
+    fill.position.set(2, -3, 4);
     scene.add(fill);
 
     dbg('Lights OK');
@@ -324,11 +325,11 @@
               child.castShadow = true;
               child.receiveShadow = false;
               child.material = new THREE.MeshStandardMaterial({
-                color: 0xf4e8db,
-                roughness: 0.6,
-                metalness: 0.01,
-                emissive: 0x1d1712,
-                emissiveIntensity: 0.04,
+                color: 0xe8dfd0,
+                roughness: 0.78,
+                metalness: 0,
+                emissive: 0x17130f,
+                emissiveIntensity: 0.025,
                 side: THREE.DoubleSide
               });
             }
