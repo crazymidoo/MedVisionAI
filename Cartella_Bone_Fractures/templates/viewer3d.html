@@ -37,7 +37,7 @@
     .back { color: #38bdf8; text-decoration: none; font-size: 12px; font-weight: 600; }
     .back:hover { text-decoration: underline; }
     .disclaimer { border-left: 3px solid #38bdf8; padding-left: 10px; }
-    #debug { position: absolute; bottom: 20px; left: 20px; background: rgba(0, 90, 0, 0.9); color: #88ff88; font-family: monospace; font-size: 10px; line-height: 1.4; padding: 10px; border-radius: 8px; border: 1px solid #2aff2a; max-width: 320px; max-height: 200px; overflow-y: auto; z-index: 20; }
+    #debug { display: none; }
     @media (max-width: 1024px) { .layout { grid-template-columns: 1fr; grid-template-rows: 1fr 280px; } }
   </style>
 </head>
@@ -94,7 +94,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 
   <script>
     const MODEL_CONFIG = {{ model_config | tojson | safe }};
@@ -156,15 +155,6 @@
 
     dbg('Lights OK');
 
-    const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(12, 64),
-      new THREE.ShadowMaterial({ opacity: 0.28 })
-    );
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -2.6;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
     function createFallbackBone() {
       const group = new THREE.Group();
       const mat = new THREE.MeshStandardMaterial({ color: 0xf4e8db, roughness: 0.67, metalness: 0.004 });
@@ -193,49 +183,37 @@
 
     let bone = createFallbackBone();
     scene.add(bone);
+    let boneBounds = null;
     let fractureOverlay = null;
-    let fracturePin = null;
-
-    function addFracturePin() {
-      if (fracturePin) scene.remove(fracturePin);
-      fracturePin = new THREE.Mesh(
-        new THREE.SphereGeometry(0.13, 24, 24),
-        new THREE.MeshStandardMaterial({ color: 0xff1838, emissive: 0xff1838, emissiveIntensity: 1.2 })
-      );
-      fracturePin.position.set(FRACTURE_POINT.x * 2.2, FRACTURE_POINT.y * 2.2, FRACTURE_POINT.z * 2.2);
-      scene.add(fracturePin);
-    }
 
     function loadFractureOverlay() {
-      if (!FRACTURE_MESH_URL || typeof THREE.OBJLoader !== 'function') {
-        fractureDescriptionEl.textContent = 'Open this viewer from an analyzed X-ray to show the AI mesh.';
+      if (!FRACTURE_MESH_URL) {
+        fractureDescriptionEl.textContent = 'Open this viewer from an analyzed X-ray to show the AI focus.';
         return;
       }
-      const loader = new THREE.OBJLoader();
-      loader.load(FRACTURE_MESH_URL, (object) => {
-        object.scale.setScalar(2.2);
-        object.traverse((child) => {
-          if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xff1838,
-              emissive: 0x7f0017,
-              emissiveIntensity: 0.65,
-              transparent: true,
-              opacity: 0.92,
-              side: THREE.DoubleSide,
-              roughness: 0.28
-            });
-          }
-        });
-        fractureOverlay = object;
-        scene.add(fractureOverlay);
-        addFracturePin();
-        fractureDescriptionEl.textContent = 'AI mesh loaded from the detected fracture region.';
-        statusEl.textContent = '3D fracture overlay ready';
-        statusEl.classList.add('ready');
-      }, undefined, () => {
-        fractureDescriptionEl.textContent = 'The AI mesh could not be loaded; anatomy model remains available.';
-      });
+
+      // A 2D X-ray bounding box has no calibrated 3D projection onto the GLB.
+      // Use the registered anatomical marker instead of showing a misleading floating mesh.
+      const selectedId = INITIAL_FOCUS_ID || MODEL_CONFIG.frequent_sites[0]?.id;
+      const entry = selectedId ? siteMarkerGroups.get(selectedId) : null;
+      if (!entry) return;
+
+      const indicator = new THREE.Mesh(
+        new THREE.TorusGeometry(0.24, 0.045, 12, 32),
+        new THREE.MeshStandardMaterial({
+          color: 0xff1838,
+          emissive: 0x9f001c,
+          emissiveIntensity: 1.4,
+          transparent: true,
+          opacity: 0.95
+        })
+      );
+      indicator.rotation.x = Math.PI / 2;
+      entry.group.add(indicator);
+      fractureOverlay = indicator;
+      fractureDescriptionEl.textContent = 'AI focus registered on the selected anatomical site.';
+      statusEl.textContent = '3D fracture focus ready';
+      statusEl.classList.add('ready');
     }
     dbg('Bone fallback visible');
 
@@ -268,9 +246,29 @@
       const light = new THREE.PointLight(0xff4d5a, 0.55, 2.2);
       const group = new THREE.Group();
       group.add(core, halo, light);
-      group.position.set(site.position.x, site.position.y, site.position.z);
+      group.visible = false;
       scene.add(group);
       siteMarkerGroups.set(site.id, { group, core, halo, site });
+    }
+
+    function sitePosition(site) {
+      if (boneBounds && MODEL_CONFIG.region === 'humerus') {
+        const size = boneBounds.getSize(new THREE.Vector3());
+        const axis = size.x >= Math.max(size.y, size.z) ? 'x' : (size.y >= size.z ? 'y' : 'z');
+        const center = boneBounds.getCenter(new THREE.Vector3());
+        const fractions = {
+          'surgical-neck': 0.16,
+          'mid-shaft': 0.50,
+          'distal-humerus': 0.84
+        };
+        const fraction = fractions[site.id] ?? 0.5;
+        const position = center.clone();
+        position[axis] = boneBounds.min[axis] + size[axis] * fraction;
+        const depthAxis = axis === 'x' ? 'z' : 'x';
+        position[depthAxis] = boneBounds.max[depthAxis] + 0.04;
+        return position;
+      }
+      return new THREE.Vector3(site.position.x, site.position.y, site.position.z);
     }
 
     function activateSite(siteId) {
@@ -279,6 +277,7 @@
 
       siteMarkerGroups.forEach((entry, id) => {
         const isActive = id === siteId;
+        entry.group.visible = isActive;
         entry.core.material.emissiveIntensity = isActive ? 1.4 : 0.4;
         entry.halo.material.opacity = isActive ? 0.30 : 0.10;
         entry.group.scale.setScalar(isActive ? 1.25 : 0.92);
@@ -293,6 +292,15 @@
 
       statusEl.textContent = 'Active educational site: ' + selected.label;
       statusEl.classList.add('ready');
+
+      const focusPoint = sitePosition(selected);
+      const markerEntry = siteMarkerGroups.get(siteId);
+      markerEntry.group.position.copy(focusPoint);
+      if (controls) {
+        controls.target.copy(focusPoint);
+        camera.position.set(focusPoint.x, focusPoint.y + 1.2, focusPoint.z + 5.6);
+        controls.update();
+      }
     }
 
     statusEl.textContent = 'Loading anatomical district ' + MODEL_CONFIG.region_label + '...';
@@ -335,6 +343,10 @@
 
           bone.position.sub(center);
           bone.scale.setScalar(scale);
+          boneBounds = new THREE.Box3().setFromObject(bone);
+          const normalizedCenter = boneBounds.getCenter(new THREE.Vector3());
+          bone.position.sub(normalizedCenter);
+          boneBounds = new THREE.Box3().setFromObject(bone);
 
           if (controls) {
             controls.target.set(0, 0, 0);
@@ -347,6 +359,7 @@
           if (MODEL_CONFIG.frequent_sites.length > 0) {
             const startSite = INITIAL_FOCUS_ID || MODEL_CONFIG.frequent_sites[0].id;
             activateSite(startSite);
+            loadFractureOverlay();
           }
           dbg('GLB loaded (' + MODEL_CONFIG.region + ') ✓ size=' + maxDim.toFixed(2) + ' scale=' + scale.toFixed(4));
         },
@@ -364,8 +377,6 @@
     } else {
       statusEl.textContent = 'GLTFLoader unavailable, fallback active';
     }
-
-    loadFractureOverlay();
 
     document.querySelectorAll('.site-btn').forEach((btn) => {
       btn.addEventListener('click', () => activateSite(btn.dataset.siteId));

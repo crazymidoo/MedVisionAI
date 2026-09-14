@@ -50,9 +50,11 @@ From the repository root, run:
 ./start.sh
 ```
 
-The script installs the Python dependencies from [requirements.txt](requirements.txt), enters the app directory automatically, and starts Flask at `http://127.0.0.1:5000`. It also starts the fracture mesh API at `http://127.0.0.1:8000`.
+The script installs the Python dependencies from [requirements.txt](requirements.txt), enters the app directory automatically, and starts only MedVisionAI at `http://127.0.0.1:5000`.
 
-FastAPI documentation is available at `http://127.0.0.1:8000/docs`.
+The optional FastAPI mesh service is not started by the normal command. To run
+it separately for API development, use `cd Cartella_Bone_Fractures && python -m
+uvicorn mesh_api:app --host 127.0.0.1 --port 8000`.
 
 ### Manual setup
 
