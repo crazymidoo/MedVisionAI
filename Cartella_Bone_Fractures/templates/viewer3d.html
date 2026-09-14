@@ -18,20 +18,6 @@
     .card { border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 10px; padding: 10px; background: rgba(13, 24, 44, 0.5); font-size: 12px; }
     .card h3 { font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
     .card p { color: #94a3b8; line-height: 1.5; }
-    .site-list { display: flex; flex-direction: column; gap: 8px; }
-    .site-btn {
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      background: rgba(12, 26, 45, 0.62);
-      color: #cbd5e1;
-      border-radius: 8px;
-      text-align: left;
-      padding: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: border-color 160ms ease, background 160ms ease;
-    }
-    .site-btn:hover { border-color: rgba(56, 189, 248, 0.5); }
-    .site-btn.active { border-color: rgba(134, 225, 160, 0.6); background: rgba(30, 58, 54, 0.72); color: #d1fae5; }
     .status { padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); font-size: 12px; color: #cbd5e1; min-height: 48px; display: flex; align-items: center; }
     .status.ready { color: #86e1a0; border-color: rgba(134, 225, 160, 0.35); }
     .back { color: #38bdf8; text-decoration: none; font-size: 12px; font-weight: 600; }
@@ -63,22 +49,6 @@
         <h3>District</h3>
         <p>{{ model_config.region_label }}</p>
       </div>
-      <div class="card">
-        <h3>Visual Clinical Legend</h3>
-        <div class="site-list">
-          {% for site in model_config.frequent_sites %}
-          <button type="button" class="site-btn" data-site-id="{{ site.id }}">{{ site.label }}</button>
-          {% endfor %}
-        </div>
-      </div>
-      <div class="card">
-        <h3>Highlighted Site</h3>
-        <p id="site-description">Click a legend item to see details.</p>
-      </div>
-      <div class="card fracture-card">
-        <h3>AI fracture overlay</h3>
-        <p id="fracture-description">No generated fracture mesh was supplied.</p>
-      </div>
       <div class="card disclaimer">
         <h3>Disclaimer</h3>
         <p>Illustrative model: this is not a patient-specific reconstruction and does not replace a medical report.</p>
@@ -97,14 +67,9 @@
 
   <script>
     const MODEL_CONFIG = {{ model_config | tojson | safe }};
-    const INITIAL_FOCUS_ID = {{ initial_focus_id | tojson | safe }};
-    const FRACTURE_MESH_URL = {{ fracture_mesh_url | tojson | safe }};
-    const FRACTURE_POINT = {{ fracture_point | tojson | safe }};
     const canvas = document.getElementById('canvas');
     const debugEl = document.getElementById('debug');
     const statusEl = document.getElementById('status');
-    const siteDescriptionEl = document.getElementById('site-description');
-    const fractureDescriptionEl = document.getElementById('fracture-description');
     const logs = [];
 
     function dbg(msg) {
@@ -184,38 +149,6 @@
 
     let bone = createFallbackBone();
     scene.add(bone);
-    let boneBounds = null;
-    let fractureOverlay = null;
-
-    function loadFractureOverlay() {
-      if (!FRACTURE_MESH_URL) {
-        fractureDescriptionEl.textContent = 'Open this viewer from an analyzed X-ray to show the AI focus.';
-        return;
-      }
-
-      // A 2D X-ray bounding box has no calibrated 3D projection onto the GLB.
-      // Use the registered anatomical marker instead of showing a misleading floating mesh.
-      const selectedId = INITIAL_FOCUS_ID || MODEL_CONFIG.frequent_sites[0]?.id;
-      const entry = selectedId ? siteMarkerGroups.get(selectedId) : null;
-      if (!entry) return;
-
-      const indicator = new THREE.Mesh(
-        new THREE.TorusGeometry(0.24, 0.045, 12, 32),
-        new THREE.MeshStandardMaterial({
-          color: 0xff1838,
-          emissive: 0x9f001c,
-          emissiveIntensity: 1.4,
-          transparent: true,
-          opacity: 0.95
-        })
-      );
-      indicator.rotation.x = Math.PI / 2;
-      entry.group.add(indicator);
-      fractureOverlay = indicator;
-      fractureDescriptionEl.textContent = 'AI focus registered on the selected anatomical site.';
-      statusEl.textContent = '3D fracture focus ready';
-      statusEl.classList.add('ready');
-    }
     dbg('Bone fallback visible');
 
     let controls = null;
@@ -230,78 +163,6 @@
       dbg('OrbitControls OK');
     } else {
       dbg('OrbitControls missing');
-    }
-
-    const siteMarkerGroups = new Map();
-    let activeSiteId = null;
-
-    function createSiteMarker(site) {
-      const core = new THREE.Mesh(
-        new THREE.SphereGeometry(0.08, 18, 18),
-        new THREE.MeshStandardMaterial({ color: 0xff6b6b, emissive: 0xff2f2f, emissiveIntensity: 0.7, roughness: 0.3 })
-      );
-      const halo = new THREE.Mesh(
-        new THREE.SphereGeometry(0.16, 18, 18),
-        new THREE.MeshStandardMaterial({ color: 0xff8f8f, emissive: 0xff5454, emissiveIntensity: 0.4, transparent: true, opacity: 0.22 })
-      );
-      const light = new THREE.PointLight(0xff4d5a, 0.55, 2.2);
-      const group = new THREE.Group();
-      group.add(core, halo, light);
-      group.visible = false;
-      scene.add(group);
-      siteMarkerGroups.set(site.id, { group, core, halo, site });
-    }
-
-    function sitePosition(site) {
-      if (boneBounds && MODEL_CONFIG.region === 'humerus') {
-        const size = boneBounds.getSize(new THREE.Vector3());
-        const axis = size.x >= Math.max(size.y, size.z) ? 'x' : (size.y >= size.z ? 'y' : 'z');
-        const center = boneBounds.getCenter(new THREE.Vector3());
-        const fractions = {
-          'surgical-neck': 0.16,
-          'mid-shaft': 0.50,
-          'distal-humerus': 0.84
-        };
-        const fraction = fractions[site.id] ?? 0.5;
-        const position = center.clone();
-        position[axis] = boneBounds.min[axis] + size[axis] * fraction;
-        const depthAxis = axis === 'x' ? 'z' : 'x';
-        position[depthAxis] = boneBounds.max[depthAxis] + 0.04;
-        return position;
-      }
-      return new THREE.Vector3(site.position.x, site.position.y, site.position.z);
-    }
-
-    function activateSite(siteId) {
-      if (!siteMarkerGroups.has(siteId)) return;
-      activeSiteId = siteId;
-
-      siteMarkerGroups.forEach((entry, id) => {
-        const isActive = id === siteId;
-        entry.group.visible = isActive;
-        entry.core.material.emissiveIntensity = isActive ? 1.4 : 0.4;
-        entry.halo.material.opacity = isActive ? 0.30 : 0.10;
-        entry.group.scale.setScalar(isActive ? 1.25 : 0.92);
-      });
-
-      const selected = siteMarkerGroups.get(siteId).site;
-      siteDescriptionEl.textContent = selected.description;
-
-      document.querySelectorAll('.site-btn').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.siteId === siteId);
-      });
-
-      statusEl.textContent = 'Active educational site: ' + selected.label;
-      statusEl.classList.add('ready');
-
-      const focusPoint = sitePosition(selected);
-      const markerEntry = siteMarkerGroups.get(siteId);
-      markerEntry.group.position.copy(focusPoint);
-      if (controls) {
-        controls.target.copy(focusPoint);
-        camera.position.set(focusPoint.x, focusPoint.y + 1.2, focusPoint.z + 5.6);
-        controls.update();
-      }
     }
 
     statusEl.textContent = 'Loading anatomical district ' + MODEL_CONFIG.region_label + '...';
@@ -344,10 +205,8 @@
 
           bone.position.sub(center);
           bone.scale.setScalar(scale);
-          boneBounds = new THREE.Box3().setFromObject(bone);
-          const normalizedCenter = boneBounds.getCenter(new THREE.Vector3());
-          bone.position.sub(normalizedCenter);
-          boneBounds = new THREE.Box3().setFromObject(bone);
+          const normalizedBounds = new THREE.Box3().setFromObject(bone);
+          bone.position.sub(normalizedBounds.getCenter(new THREE.Vector3()));
 
           if (controls) {
             controls.target.set(0, 0, 0);
@@ -356,12 +215,8 @@
           }
 
           scene.add(bone);
-          MODEL_CONFIG.frequent_sites.forEach((site) => createSiteMarker(site));
-          if (MODEL_CONFIG.frequent_sites.length > 0) {
-            const startSite = INITIAL_FOCUS_ID || MODEL_CONFIG.frequent_sites[0].id;
-            activateSite(startSite);
-            loadFractureOverlay();
-          }
+          statusEl.textContent = 'Anatomical model ready';
+          statusEl.classList.add('ready');
           dbg('GLB loaded (' + MODEL_CONFIG.region + ') ✓ size=' + maxDim.toFixed(2) + ' scale=' + scale.toFixed(4));
         },
         (p) => {
@@ -379,21 +234,9 @@
       statusEl.textContent = 'GLTFLoader unavailable, fallback active';
     }
 
-    document.querySelectorAll('.site-btn').forEach((btn) => {
-      btn.addEventListener('click', () => activateSite(btn.dataset.siteId));
-    });
-
     const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-
-      siteMarkerGroups.forEach((entry, id) => {
-        const base = id === activeSiteId ? 1.0 : 0.88;
-        const pulse = base + Math.sin(t * 3.8 + entry.group.position.y) * 0.06;
-        entry.core.scale.setScalar(pulse);
-        entry.halo.scale.setScalar(1 + Math.sin(t * 3.8 + 0.6 + entry.group.position.x) * 0.16);
-      });
 
       if (controls) controls.update();
       renderer.render(scene, camera);
